@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "puc-final-project"
+version = "0.1.0"
+description = "An investigative research on Large Language Models' Responses to Everyday Moral Dilemmas in Different Cultural Contexts"
+requires-python = ">=3.8"
+
+dependencies = [
+    "praw>=7.8.0",
+    "pandas>=2.2.0",
+    "matplotlib>=3.8.0",
+    "seaborn>=0.13.0",
+    "ipykernel>=6.29.0",
+    "jupyter>=1.0.0",
+    "python-dotenv>=1.0.0",
+] 
