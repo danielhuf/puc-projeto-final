@@ -15,7 +15,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics.pairwise import cosine_similarity
 from typing import List, Tuple, Dict
-from pathlib import Path
 from tqdm import tqdm
 from sklearn.preprocessing import normalize
 
@@ -75,10 +74,6 @@ for col in embeddings_dict.keys():
 
 models = sorted(list(models))
 reason_types = sorted(list(reason_types))
-
-# %% Create results directory
-results_dir = Path("../results/similarities")
-results_dir.mkdir(parents=True, exist_ok=True)
 
 # %% [markdown]
 # ## 1. Row-wise Analysis: Model Comparison for Same Scenarios
@@ -186,7 +181,7 @@ row_similarities = analyze_row_similarities(embeddings_dict, models, reason_type
 
 
 # %% Visualize row-wise similarities
-def plot_row_similarity_distribution(row_similarities: Dict, save_path: str = None):
+def plot_row_similarity_distribution(row_similarities: Dict):
     """Plot distribution of similarities across rows.
 
     Shows mean similarities across all available reason type combinations
@@ -253,15 +248,10 @@ def plot_row_similarity_distribution(row_similarities: Dict, save_path: str = No
         y=1.02,
         fontsize=16,
     )
-
-    if save_path:
-        plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.show()
 
 
-plot_row_similarity_distribution(
-    row_similarities, results_dir / "row_similarities_distribution.png"
-)
+plot_row_similarity_distribution(row_similarities)
 
 
 # %% Statistical summary of row-wise similarities
@@ -308,7 +298,7 @@ def summarize_row_characteristics(row_similarities: Dict):
     return summary_df
 
 
-row_summary = summarize_row_characteristics(row_similarities)
+summarize_row_characteristics(row_similarities)
 
 # %% [markdown]
 # ## 2. Column-wise Analysis: Scenario Comparison for Same Models
@@ -401,7 +391,7 @@ column_similarities = analyze_column_similarities(embeddings_dict, models, reaso
 
 
 # %% Visualize column-wise similarities
-def plot_column_similarity_comparison(column_similarities: Dict, save_path: str = None):
+def plot_column_similarity_comparison(column_similarities: Dict):
     """Compare intra-model similarity distributions."""
 
     model_names = list(column_similarities.keys())
@@ -469,14 +459,10 @@ def plot_column_similarity_comparison(column_similarities: Dict, save_path: str 
 
     plt.tight_layout()
 
-    if save_path:
-        plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.show()
 
 
-plot_column_similarity_comparison(
-    column_similarities, results_dir / "column_similarities_comparison.png"
-)
+plot_column_similarity_comparison(column_similarities)
 
 
 # %% Statistical summary of model differences
@@ -506,7 +492,7 @@ def summarize_column_characteristics(column_similarities: Dict):
     return summary_df
 
 
-model_summary = summarize_column_characteristics(column_similarities)
+summarize_column_characteristics(column_similarities)
 
 # %% [markdown]
 # ## 3. Reason-wise Analysis: Different Reasoning Approaches for Same Model-Scenario
@@ -604,7 +590,7 @@ reason_similarities = analyze_reason_similarities(embeddings_dict, models, reaso
 
 
 # %% Visualize reason-wise similarities
-def plot_reason_similarity_comparison(reason_similarities: Dict, save_path: str = None):
+def plot_reason_similarity_comparison(reason_similarities: Dict):
     """Compare reason-wise similarity distributions with separate subplots for each model."""
 
     model_names = list(reason_similarities.keys())
@@ -677,14 +663,10 @@ def plot_reason_similarity_comparison(reason_similarities: Dict, save_path: str 
 
     plt.tight_layout()
 
-    if save_path:
-        plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.show()
 
 
-plot_reason_similarity_comparison(
-    reason_similarities, results_dir / "reason_similarities_comparison.png"
-)
+plot_reason_similarity_comparison(reason_similarities)
 
 
 # %% Statistical summary of reason-wise characteristics
@@ -719,7 +701,7 @@ def summarize_reason_characteristics(reason_similarities: Dict):
     return summary_df
 
 
-reason_summary = summarize_reason_characteristics(reason_similarities)
+summarize_reason_characteristics(reason_similarities)
 
 
 # %% Cross-analysis: Intra-Model similarity vs. inter-model similarity
@@ -801,9 +783,6 @@ def cross_analyze_model_similarity(
     plt.grid(True, alpha=0.3)
 
     plt.tight_layout()
-    plt.savefig(
-        results_dir / "cross_analyze_model_similarity.png", dpi=300, bbox_inches="tight"
-    )
     plt.show()
 
     print("=== COMPLETE ANALYSIS RESULTS ===")
@@ -954,9 +933,7 @@ human_llm_similarities = analyze_human_llm_similarities(embeddings_dict, models)
 
 
 # %% Visualize human-LLM similarities
-def plot_human_llm_similarity_comparison(
-    human_llm_similarities: Dict[str, np.ndarray], save_path: str = None
-):
+def plot_human_llm_similarity_comparison(human_llm_similarities: Dict[str, np.ndarray]):
     """Compare human-LLM similarity distributions across models."""
 
     model_names = list(human_llm_similarities.keys())
@@ -1031,14 +1008,10 @@ def plot_human_llm_similarity_comparison(
 
     plt.tight_layout()
 
-    if save_path:
-        plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.show()
 
 
-plot_human_llm_similarity_comparison(
-    human_llm_similarities, results_dir / "human_llm_similarities_comparison.png"
-)
+plot_human_llm_similarity_comparison(human_llm_similarities)
 
 
 # %% Statistical summary of human-LLM similarities
@@ -1082,7 +1055,7 @@ def summarize_human_llm_characteristics(human_llm_similarities: Dict[str, np.nda
     return summary_df
 
 
-human_llm_summary = summarize_human_llm_characteristics(human_llm_similarities)
+summarize_human_llm_characteristics(human_llm_similarities)
 
 
 # %%
