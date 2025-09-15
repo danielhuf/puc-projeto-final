@@ -456,7 +456,7 @@ def plot_column_similarity_comparison(column_similarities: Dict):
     ax_box.set_xlabel("Model")
     ax_box.set_ylabel("Cosine Similarity")
     ax_box.set_title("Intra-Model Similarity Comparison")
-    ax_box.tick_params(axis="x", rotation=45)
+    ax_box.tick_params(axis="x", rotation=0)
     ax_box.grid(True, alpha=0.3)
 
     plt.tight_layout()
@@ -660,7 +660,7 @@ def plot_reason_similarity_comparison(reason_similarities: Dict):
     ax_box.set_xlabel("Model")
     ax_box.set_ylabel("Cosine Similarity")
     ax_box.set_title("Reason-wise Similarity Comparison")
-    ax_box.tick_params(axis="x", rotation=45)
+    ax_box.tick_params(axis="x", rotation=0)
     ax_box.grid(True, alpha=0.3)
 
     plt.tight_layout()
@@ -1005,7 +1005,7 @@ def plot_human_llm_similarity_comparison(human_llm_similarities: Dict[str, np.nd
     ax_box.set_xlabel("Model")
     ax_box.set_ylabel("Cosine Similarity with Human Responses")
     ax_box.set_title("Human-LLM Similarity Comparison")
-    ax_box.tick_params(axis="x", rotation=45)
+    ax_box.tick_params(axis="x", rotation=0)
     ax_box.grid(True, alpha=0.3)
 
     plt.tight_layout()
