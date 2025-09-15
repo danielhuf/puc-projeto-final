@@ -323,7 +323,7 @@ def analyze_column_similarities(
     models: List[str],
     reason_types: List[str],
 ) -> Dict:
-    """Analyze intra-model consistency across different ethical scenarios (column-wise analysis).
+    """Analyze intra-model similarity across different ethical scenarios (column-wise analysis).
 
     This function measures how consistent each AI model is when responding to different
     ethical dilemmas. It calculates the similarity between all pairs of scenarios for
@@ -343,8 +343,8 @@ def analyze_column_similarities(
         {
             'model_name': {
                 'similarities': numpy_array_of_all_pairwise_similarities,
-                'mean_similarity': average_consistency_score,
-                'std_similarity': variability_in_consistency
+                'mean_similarity': average_similarity_score,
+                'std_similarity': variability_in_similarity
             }
         }
 
@@ -541,7 +541,7 @@ def analyze_reason_similarities(
         {
             'model_name': {
                 'similarities': numpy_array_of_all_reason_pair_similarities,
-                'mean_similarity': average_reasoning_consistency,
+                'mean_similarity': average_reasoning_similarity,
                 'std_similarity': variability_in_reasoning_consistency,
                 'available_reasons': list_of_reasoning_types_for_model
             }
@@ -550,7 +550,7 @@ def analyze_reason_similarities(
     1. For each model, identify available reasoning approaches
     2. For each scenario, compare all unique reasoning type pairs
     3. Aggregate similarity scores across all scenarios and reason pairs
-    4. Calculate statistics on the resulting consistency distribution
+    4. Calculate statistics on the resulting similarity distribution
     """
 
     reason_similarities = {}
@@ -722,11 +722,11 @@ def summarize_reason_characteristics(reason_similarities: Dict):
 reason_summary = summarize_reason_characteristics(reason_similarities)
 
 
-# %% Cross-analysis: Model consistency vs. diversity
-def analyze_model_consistency_vs_diversity(
+# %% Cross-analysis: Intra-Model similarity vs. inter-model similarity
+def cross_analyze_model_similarity(
     row_similarities: Dict, column_similarities: Dict, reason_similarities: Dict
 ):
-    """Analyze the relationship between inter-model agreement and intra-model diversity."""
+    """Analyze the relationship between inter-model similarity and intra-model similarity."""
 
     # Calculate inter-model similarity for each model
     inter_model_means = {}
@@ -756,7 +756,7 @@ def analyze_model_consistency_vs_diversity(
                     "Model": model,
                     "Intra-Model_Diversity_Score": 1
                     - column_similarities[model]["mean_similarity"],
-                    "Inter-Model_Consistency_Score": inter_model_means[model],
+                    "Inter-Model_Similarity_Score": inter_model_means[model],
                     "Reason_Consistency_Score": reason_similarities[model][
                         "mean_similarity"
                     ],
@@ -770,11 +770,13 @@ def analyze_model_consistency_vs_diversity(
     plot_df = comparison_df.dropna(subset=["Reason_Consistency_Score"])
     scatter = plt.scatter(
         plot_df["Intra-Model_Diversity_Score"],
-        plot_df["Inter-Model_Consistency_Score"],
+        plot_df["Inter-Model_Similarity_Score"],
         s=120,
         alpha=0.8,
         c=plot_df["Reason_Consistency_Score"],
-        cmap="RdYlBu_r",
+        cmap="viridis",
+        vmin=0.0,
+        vmax=1.0,
         edgecolors="black",
         linewidth=0.5,
     )
@@ -785,22 +787,22 @@ def analyze_model_consistency_vs_diversity(
     for i, row in plot_df.iterrows():
         plt.annotate(
             row["Model"],
-            (row["Intra-Model_Diversity_Score"], row["Inter-Model_Consistency_Score"]),
+            (row["Intra-Model_Diversity_Score"], row["Inter-Model_Similarity_Score"]),
             xytext=(5, 5),
             textcoords="offset points",
             fontweight="bold",
         )
 
-    plt.xlabel("Intra-Model Diversity Score (1 - Intra-Model Similarity)")
-    plt.ylabel("Inter-Model Consistency Score (Inter-Model Similarity)")
+    plt.xlabel("1 - Intra-Model Similarity")
+    plt.ylabel("Inter-Model Similarity")
 
-    title = "Model Diversity vs. Consistency Analysis (Color = Reason-wise Consistency)"
+    title = "Intra-Model similarity vs. inter-model similarity Analysis (Color = Reason-wise consistency)"
     plt.title(title)
     plt.grid(True, alpha=0.3)
 
     plt.tight_layout()
     plt.savefig(
-        results_dir / "diversity_vs_consistency.png", dpi=300, bbox_inches="tight"
+        results_dir / "cross_analyze_model_similarity.png", dpi=300, bbox_inches="tight"
     )
     plt.show()
 
@@ -808,7 +810,7 @@ def analyze_model_consistency_vs_diversity(
     display_cols = [
         "Model",
         "Intra-Model_Diversity_Score",
-        "Inter-Model_Consistency_Score",
+        "Inter-Model_Similarity_Score",
         "Reason_Consistency_Score",
     ]
     print(comparison_df[display_cols].round(4))
@@ -816,7 +818,7 @@ def analyze_model_consistency_vs_diversity(
     return comparison_df
 
 
-consistency_analysis = analyze_model_consistency_vs_diversity(
+cross_analyze_model_similarity(
     row_similarities, column_similarities, reason_similarities
 )
 
@@ -829,15 +831,15 @@ consistency_analysis = analyze_model_consistency_vs_diversity(
 #
 # 1. **Inter-Model Agreement** (Mean: 69.4% ± 5.4%):
 #    - Models show reasonable consensus across ethical scenarios (range: 48.5% - 85.7%)
-#    - **Claude** shows highest agreement with other models (73.9% consistency score)
-#    - **Bison** shows lowest agreement with other models (63.7% consistency score)
+#    - **Claude** shows highest agreement with other models (73.9% similarity score)
+#    - **Bison** shows lowest agreement with other models (63.7% similarity score)
 #    - Agreement varies significantly by scenario, suggesting some ethical dilemmas create more consensus than others
 #    - 90% of scenarios fall between 62.3% - 76.2% inter-model agreement, showing generally stable but varied consensus
 #
 # 2. **Intra-Model Agreement** (Range: 28.5% - 49.8%):
-#    - **Gemma** is most internally consistent (49.8% ± 10.1%) - most predictable responses
-#    - **Bison** is least internally consistent (28.5% ± 12.1%) - most unpredictable responses
-#    - Internal consistency range of 21.3% indicates significant diversity in model architectures and training
+#    - **Gemma** is most internally similar (49.8% ± 10.1%) - most predictable responses
+#    - **Bison** is least internally similar (28.5% ± 12.1%) - most unpredictable responses
+#    - Internal similarity range of 21.3% indicates significant diversity in model architectures and training
 #
 # 3. **Reason-wise Consistency** (Range: 72.9% - 90.6%):
 #    - **Claude** shows highest reasoning coherence (90.6% ± 5.6%) - most consistent across different reasoning approaches
@@ -845,14 +847,14 @@ consistency_analysis = analyze_model_consistency_vs_diversity(
 #    - Mean reason-wise consistency (80.7% ± 6.1%) much higher than intra-model consistency, indicating models are more consistent within reasoning types than across scenarios
 #
 # 4. **Three-Dimensional Model Profiles**:
-#    - **Claude**: High inter-model agreement (73.9%), moderate intra-model consistency (43.1%), highest reasoning coherence (90.6%)
-#    - **Gemma**: Moderate inter-model agreement (69.3%), highest intra-model consistency (49.8%), moderate reasoning coherence (76.4%)
-#    - **GPT-4**: Moderate inter-model agreement (67.9%), lowest intra-model consistency (31.9%), moderate reasoning coherence (76.7%)
-#    - **Bison**: Lowest inter-model agreement (63.7%), lowest intra-model consistency (28.5%), high reasoning coherence (82.4%)
+#    - **Claude**: High inter-model agreement (73.9%), moderate intra-model agreement (43.1%), highest reasoning coherence (90.6%)
+#    - **Gemma**: Moderate inter-model agreement (69.3%), highest intra-model agreement (49.8%), moderate reasoning coherence (76.4%)
+#    - **GPT-4**: Moderate inter-model agreement (67.9%), lowest intra-model agreement (31.9%), moderate reasoning coherence (76.7%)
+#    - **Bison**: Lowest inter-model agreement (63.7%), lowest intra-model agreement (28.5%), high reasoning coherence (82.4%)
 #
 # ### Practical Implications:
 #
-# - **Most Predictable Ethics**: Gemma (highest internal consistency across scenarios)
+# - **Most Predictable Ethics**: Gemma (highest internal agreement across scenarios)
 # - **Most Coherent Reasoning**: Claude (most consistent across different reasoning approaches)
 # - **Most Diverse Perspectives**: GPT-4 and Bison (high variability in responses)
 # - **Best Overall Balance**: Claude (reliable consensus + coherent reasoning + moderate diversity)
