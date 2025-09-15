@@ -449,6 +449,7 @@ def plot_column_similarity_comparison(column_similarities: Dict, save_path: str 
             alpha=0.8,
             label=f"Median: {median_sim:.3f}",
         )
+        ax.set_xlim(0, 1)
         ax.legend()
 
     ax_box = axes[-1]
@@ -656,6 +657,7 @@ def plot_reason_similarity_comparison(reason_similarities: Dict, save_path: str 
             alpha=0.8,
             label=f"Median: {median_sim:.3f}",
         )
+        ax.set_xlim(0, 1)
         ax.legend()
 
     ax_box = axes[-1]
@@ -1006,6 +1008,7 @@ def plot_human_llm_similarity_comparison(
             alpha=0.8,
             label=f"Median: {median_sim:.3f}",
         )
+        ax.set_xlim(0, 1)
         ax.legend()
 
     # Box plot comparison at the bottom
