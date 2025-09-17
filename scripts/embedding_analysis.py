@@ -17,6 +17,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 from typing import List, Tuple, Dict
 from tqdm import tqdm
 from sklearn.preprocessing import normalize
+import pickle
+from pathlib import Path
 
 plt.style.use("seaborn-v0_8")
 sns.set_palette("husl")
@@ -177,7 +179,16 @@ def analyze_row_similarities(
 
 
 # Analyze with all available reason types
-row_similarities = analyze_row_similarities(embeddings_dict, models, reason_types)
+cache_path = Path("../data/row_similarities.pkl")
+if cache_path.exists():
+    print("Loading row_similarities from cache...")
+    with open(cache_path, "rb") as f:
+        row_similarities = pickle.load(f)
+else:
+    row_similarities = analyze_row_similarities(embeddings_dict, models, reason_types)
+    with open(cache_path, "wb") as f:
+        pickle.dump(row_similarities, f)
+    print(f"Saved row_similarities to {cache_path}")
 
 
 # %% Visualize row-wise similarities
@@ -588,7 +599,16 @@ def analyze_reason_similarities(
     return reason_similarities
 
 
-reason_similarities = analyze_reason_similarities(embeddings_dict, models, reason_types)
+cache_path = Path("../data/reason_similarities.pkl")
+if cache_path.exists():
+    print("Loading reason_similarities from cache...")
+    with open(cache_path, "rb") as f:
+        reason_similarities = pickle.load(f)
+else:
+    reason_similarities = analyze_reason_similarities(embeddings_dict, models, reason_types)
+    with open(cache_path, "wb") as f:
+        pickle.dump(reason_similarities, f)
+    print(f"Saved reason_similarities to {cache_path}")
 
 
 # %% Visualize reason-wise similarities
