@@ -476,7 +476,7 @@ lowest_similarities, highest_similarities = display_extreme_llm_human_similariti
 # %% [markdown]
 # ## 2. Column-wise Analysis: Scenario Comparison for Same Actors
 #
-# This analysis compares how similar the embeddings ofdifferent scenarios are when processed by the same actor.
+# This analysis compares how similar the embeddings of different scenarios are when processed by the same actor.
 # We'll calculate intra-actor similarities across all scenarios.
 
 
@@ -676,6 +676,415 @@ with open(results_dir / "column_wise_analysis_results.json", "w") as f:
     json.dump(column_summary_dict, f, indent=2)
 print(
     f"Column-wise analysis results saved to {results_dir / 'column_wise_analysis_results.json'}"
+)
+
+
+# %% Display extreme scenario similarity cases
+def display_extreme_scenario_similarities(
+    embeddings_dict: Dict[str, np.ndarray],
+    actors: List[str],
+    reason_types: List[str],
+):
+    """Display the top 5 highest and lowest scenario similarity cases for humans and LLMs."""
+
+    import pandas as pd
+    import numpy as np
+
+    # For now, we'll create a minimal dataset structure
+    # In a production environment, you might want to use a more efficient data loading approach
+    print("Loading cleaned dataset (164MB file)...")
+
+    # Try to read with minimal memory usage
+    try:
+        df_cleaned = pd.read_csv(
+            "../data/normative_evaluation_everyday_dilemmas_dataset_cleaned.csv",
+            low_memory=True,  # Use low_memory=True for better memory management
+            encoding="utf-8",
+            dtype={
+                "submission_id": "string",
+                "title": "string",
+                "top_comment": "string",
+            },  # Specify dtypes to reduce memory
+        )
+        print(f"Successfully loaded dataset with {len(df_cleaned)} rows")
+    except MemoryError as e:
+        print(f"Memory error loading full dataset: {e}")
+        print("Falling back to chunked reading...")
+
+        # Read only the columns we need
+        required_cols = ["submission_id", "title", "top_comment"]
+
+        # Add LLM reason columns dynamically based on actors
+        for actor in actors:
+            if actor != "human":
+                for i in range(1, 4):  # reason_1, reason_2, reason_3
+                    col_name = f"{actor}_reason_{i}"
+                    required_cols.append(col_name)
+
+        chunk_list = []
+        chunk_size = 2000  # Smaller chunks
+        for chunk in pd.read_csv(
+            "../data/normative_evaluation_everyday_dilemmas_dataset_cleaned.csv",
+            chunksize=chunk_size,
+            usecols=required_cols,  # Only load required columns
+            encoding="utf-8",
+            low_memory=True,
+        ):
+            chunk_list.append(chunk)
+
+        df_cleaned = pd.concat(chunk_list, ignore_index=True)
+        print(f"Successfully loaded dataset in chunks with {len(df_cleaned)} rows")
+
+    # Calculate individual scenario similarities for each actor
+    actor_scenario_similarities = {}
+
+    print(f"Calculating extreme scenario similarities for {len(actors)} actors...")
+    for actor_idx, actor in enumerate(actors, 1):
+        print(f"Processing actor {actor_idx}/{len(actors)}: {actor}")
+        available_reasons = []
+        actor_embeddings = {}
+
+        if actor == "human":
+            if "top_comment_embedding" in embeddings_dict:
+                available_reasons.append("top_comment")
+                actor_embeddings["top_comment"] = embeddings_dict[
+                    "top_comment_embedding"
+                ]
+        else:
+            for reason_type in reason_types:
+                col_name = f"{actor}_{reason_type}_embedding"
+                if col_name in embeddings_dict:
+                    available_reasons.append(reason_type)
+                    actor_embeddings[reason_type] = embeddings_dict[col_name]
+
+        if not available_reasons:
+            continue
+
+        # Calculate mean embeddings for each scenario
+        all_reason_embeddings = []
+        for reason in available_reasons:
+            embeddings = actor_embeddings[reason]
+            all_reason_embeddings.append(embeddings)
+
+        mean_embeddings = np.mean(all_reason_embeddings, axis=0)
+        mean_embeddings_norm = normalize(mean_embeddings, norm="l2")
+
+        # Calculate similarities on-the-fly without storing full matrix
+        n_scenarios = mean_embeddings_norm.shape[0]
+
+        # Track extreme cases without storing all similarities
+        # Initialize with dummy values that will be replaced
+        lowest_pairs = [(float("inf"), -1, -1)] * 5  # 5 worst cases
+        highest_pairs = [(float("-inf"), -1, -1)] * 5  # 5 best cases
+
+        # Calculate similarities in chunks to avoid memory issues
+        chunk_size = 500  # Smaller chunks for better memory management
+        n_chunks = (n_scenarios + chunk_size - 1) // chunk_size
+        print(f"  Processing {n_chunks} chunks of {chunk_size} scenarios each...")
+
+        for chunk_idx, i in enumerate(range(0, n_scenarios, chunk_size), 1):
+            if chunk_idx % 10 == 0 or chunk_idx == n_chunks:  # Progress every 10 chunks
+                print(f"    Chunk {chunk_idx}/{n_chunks}")
+            end_i = min(i + chunk_size, n_scenarios)
+            chunk_embeddings = mean_embeddings_norm[i:end_i]
+
+            # Calculate similarities for this chunk against all embeddings
+            chunk_similarities = cosine_similarity(
+                chunk_embeddings, mean_embeddings_norm
+            )
+
+            # Extract upper triangle for this chunk and update extremes
+            for local_i, global_i in enumerate(range(i, end_i)):
+                for j in range(global_i + 1, n_scenarios):
+                    similarity = chunk_similarities[local_i, j]
+
+                    # Check if this is one of the lowest similarities
+                    if (
+                        similarity < lowest_pairs[-1][0]
+                    ):  # Better than worst in current lowest
+                        lowest_pairs[-1] = (similarity, global_i, j)
+                        lowest_pairs.sort(key=lambda x: x[0])
+
+                    # Check if this is one of the highest similarities
+                    if (
+                        similarity > highest_pairs[0][0]
+                    ):  # Better than worst in current highest
+                        highest_pairs[0] = (similarity, global_i, j)
+                        highest_pairs.sort(key=lambda x: x[0], reverse=True)
+
+        # Remove any dummy entries and sort properly
+        lowest_pairs = [pair for pair in lowest_pairs if pair[1] != -1]
+        highest_pairs = [pair for pair in highest_pairs if pair[1] != -1]
+
+        lowest_pairs.sort(key=lambda x: x[0])
+        highest_pairs.sort(key=lambda x: x[0])
+
+        actor_scenario_similarities[actor] = {
+            "lowest": lowest_pairs,
+            "highest": highest_pairs,
+        }
+
+    # Extract extreme cases for humans
+    human_data = actor_scenario_similarities.get("human", {"lowest": [], "highest": []})
+    human_lowest_5 = human_data["lowest"]
+    human_highest_5 = human_data["highest"]
+
+    # For LLMs, collect ALL extreme cases from ALL models and find the overall top 5
+    all_llm_lowest = []
+    all_llm_highest = []
+
+    for actor in actors:
+        if actor != "human":
+            actor_data = actor_scenario_similarities.get(
+                actor, {"lowest": [], "highest": []}
+            )
+            # Add ALL extreme cases from this actor with actor identification
+            for case in actor_data["lowest"]:
+                all_llm_lowest.append((actor, case))
+            for case in actor_data["highest"]:
+                all_llm_highest.append((actor, case))
+
+    # Sort by similarity value and take top 5 for each category
+    all_llm_lowest.sort(key=lambda x: x[1][0])  # Sort by similarity (lowest first)
+    all_llm_highest.sort(
+        key=lambda x: x[1][0], reverse=True
+    )  # Sort by similarity (highest first)
+
+    llm_lowest_5 = all_llm_lowest[:5]
+    llm_highest_5 = all_llm_highest[:5]
+
+    print("=" * 100)
+    print("EXTREME SCENARIO SIMILARITY CASES")
+    print("=" * 100)
+
+    # Display human extreme cases
+    print("\n👥 HUMAN RESPONSES - EXTREME SCENARIO SIMILARITIES")
+    print("=" * 60)
+
+    print("\n🔴 TOP 5 LOWEST SIMILARITY CASES (Most Different Scenarios)")
+    print("-" * 60)
+
+    for i, case in enumerate(human_lowest_5, 1):
+        similarity, idx1, idx2 = case  # Unpack tuple (similarity, idx1, idx2)
+
+        scenario1 = df_cleaned.iloc[idx1]
+        scenario2 = df_cleaned.iloc[idx2]
+
+        title1 = (
+            scenario1["title"][:80] + "..."
+            if len(scenario1["title"]) > 80
+            else scenario1["title"]
+        )
+        title2 = (
+            scenario2["title"][:80] + "..."
+            if len(scenario2["title"]) > 80
+            else scenario2["title"]
+        )
+
+        comment1 = (
+            scenario1["top_comment"][:150] + "..."
+            if len(scenario1["top_comment"]) > 150
+            else scenario1["top_comment"]
+        )
+        comment2 = (
+            scenario2["top_comment"][:150] + "..."
+            if len(scenario2["top_comment"]) > 150
+            else scenario2["top_comment"]
+        )
+
+        print(f"\n{i}. Similarity: {similarity:.4f}")
+        print(f"   Scenario 1 (ID: {scenario1['submission_id']}): {title1}")
+        print(f"   Human Comment 1: {comment1}")
+        print(f"   Scenario 2 (ID: {scenario2['submission_id']}): {title2}")
+        print(f"   Human Comment 2: {comment2}")
+
+    print("\n🟢 TOP 5 HIGHEST SIMILARITY CASES (Most Similar Scenarios)")
+    print("-" * 60)
+
+    for i, case in enumerate(human_highest_5, 1):
+        similarity, idx1, idx2 = case  # Unpack tuple (similarity, idx1, idx2)
+
+        scenario1 = df_cleaned.iloc[idx1]
+        scenario2 = df_cleaned.iloc[idx2]
+
+        title1 = (
+            scenario1["title"][:80] + "..."
+            if len(scenario1["title"]) > 80
+            else scenario1["title"]
+        )
+        title2 = (
+            scenario2["title"][:80] + "..."
+            if len(scenario2["title"]) > 80
+            else scenario2["title"]
+        )
+
+        comment1 = (
+            scenario1["top_comment"][:150] + "..."
+            if len(scenario1["top_comment"]) > 150
+            else scenario1["top_comment"]
+        )
+        comment2 = (
+            scenario2["top_comment"][:150] + "..."
+            if len(scenario2["top_comment"]) > 150
+            else scenario2["top_comment"]
+        )
+
+        print(f"\n{i}. Similarity: {similarity:.4f}")
+        print(f"   Scenario 1 (ID: {scenario1['submission_id']}): {title1}")
+        print(f"   Human Comment 1: {comment1}")
+        print(f"   Scenario 2 (ID: {scenario2['submission_id']}): {title2}")
+        print(f"   Human Comment 2: {comment2}")
+
+    # Display LLM extreme cases
+    print("\n🤖 LLM RESPONSES - EXTREME SCENARIO SIMILARITIES")
+    print("=" * 60)
+
+    print("\n🔴 TOP 5 LOWEST SIMILARITY CASES (Most Different Scenarios)")
+    print("-" * 60)
+
+    for i, (actor, case) in enumerate(llm_lowest_5, 1):
+        similarity, idx1, idx2 = case  # Unpack tuple (similarity, idx1, idx2)
+
+        scenario1 = df_cleaned.iloc[idx1]
+        scenario2 = df_cleaned.iloc[idx2]
+
+        title1 = (
+            scenario1["title"][:80] + "..."
+            if len(scenario1["title"]) > 80
+            else scenario1["title"]
+        )
+        title2 = (
+            scenario2["title"][:80] + "..."
+            if len(scenario2["title"]) > 80
+            else scenario2["title"]
+        )
+
+        print(f"\n{i}. Similarity: {similarity:.4f} | Model: {actor.upper()}")
+        print(f"   Scenario 1 (ID: {scenario1['submission_id']}): {title1}")
+        print(f"   Scenario 2 (ID: {scenario2['submission_id']}): {title2}")
+
+        # Get LLM reasoning for both scenarios for this specific model
+        llm_reason1 = None
+        llm_reason2 = None
+        for reason_col in [
+            f"{actor}_reason_1",
+            f"{actor}_reason_2",
+            f"{actor}_reason_3",
+        ]:
+            if (
+                reason_col in scenario1
+                and pd.notna(scenario1[reason_col])
+                and llm_reason1 is None
+            ):
+                llm_reason1 = scenario1[reason_col]
+            if (
+                reason_col in scenario2
+                and pd.notna(scenario2[reason_col])
+                and llm_reason2 is None
+            ):
+                llm_reason2 = scenario2[reason_col]
+
+        reason1_preview = (
+            llm_reason1[:150] + "..."
+            if llm_reason1 and len(llm_reason1) > 150
+            else llm_reason1
+        )
+        reason2_preview = (
+            llm_reason2[:150] + "..."
+            if llm_reason2 and len(llm_reason2) > 150
+            else llm_reason2
+        )
+
+        print(f"   {actor.upper()} Reasoning:")
+        print(f"     Scenario 1: {reason1_preview}")
+        print(f"     Scenario 2: {reason2_preview}")
+
+    print("\n🟢 TOP 5 HIGHEST SIMILARITY CASES (Most Similar Scenarios)")
+    print("-" * 60)
+
+    for i, (actor, case) in enumerate(llm_highest_5, 1):
+        similarity, idx1, idx2 = case  # Unpack tuple (similarity, idx1, idx2)
+
+        scenario1 = df_cleaned.iloc[idx1]
+        scenario2 = df_cleaned.iloc[idx2]
+
+        title1 = (
+            scenario1["title"][:80] + "..."
+            if len(scenario1["title"]) > 80
+            else scenario1["title"]
+        )
+        title2 = (
+            scenario2["title"][:80] + "..."
+            if len(scenario2["title"]) > 80
+            else scenario2["title"]
+        )
+
+        print(f"\n{i}. Similarity: {similarity:.4f} | Model: {actor.upper()}")
+        print(f"   Scenario 1 (ID: {scenario1['submission_id']}): {title1}")
+        print(f"   Scenario 2 (ID: {scenario2['submission_id']}): {title2}")
+
+        # Get LLM reasoning for both scenarios for this specific model
+        llm_reason1 = None
+        llm_reason2 = None
+        for reason_col in [
+            f"{actor}_reason_1",
+            f"{actor}_reason_2",
+            f"{actor}_reason_3",
+        ]:
+            if (
+                reason_col in scenario1
+                and pd.notna(scenario1[reason_col])
+                and llm_reason1 is None
+            ):
+                llm_reason1 = scenario1[reason_col]
+            if (
+                reason_col in scenario2
+                and pd.notna(scenario2[reason_col])
+                and llm_reason2 is None
+            ):
+                llm_reason2 = scenario2[reason_col]
+
+        reason1_preview = (
+            llm_reason1[:150] + "..."
+            if llm_reason1 and len(llm_reason1) > 150
+            else llm_reason1
+        )
+        reason2_preview = (
+            llm_reason2[:150] + "..."
+            if llm_reason2 and len(llm_reason2) > 150
+            else llm_reason2
+        )
+
+        print(f"   {actor.upper()} Reasoning:")
+        print(f"     Scenario 1: {reason1_preview}")
+        print(f"     Scenario 2: {reason2_preview}")
+
+    # Summary statistics
+    print("\n📊 SUMMARY STATISTICS:")
+    print("-" * 40)
+    print(f"Human extreme cases found: {len(human_lowest_5) + len(human_highest_5)}")
+    print(f"LLM extreme cases found: {len(llm_lowest_5) + len(llm_highest_5)}")
+
+    if human_lowest_5 and human_highest_5:
+        print(
+            f"Human similarity range: {human_lowest_5[0][0]:.4f} - {human_highest_5[-1][0]:.4f}"
+        )
+    if llm_lowest_5 and llm_highest_5:
+        print(
+            f"LLM similarity range: {llm_lowest_5[0][1][0]:.4f} - {llm_highest_5[-1][1][0]:.4f}"
+        )
+
+    return {
+        "human_lowest": human_lowest_5,
+        "human_highest": human_highest_5,
+        "llm_lowest": llm_lowest_5,
+        "llm_highest": llm_highest_5,
+    }
+
+
+# Display extreme scenario similarity cases
+extreme_scenario_cases = display_extreme_scenario_similarities(
+    embeddings_dict, actors, reason_types
 )
 
 # %% [markdown]
