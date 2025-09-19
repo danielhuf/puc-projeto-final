@@ -1091,9 +1091,20 @@ summarize_human_llm_characteristics(human_llm_similarities)
 #    - **GPT-4**: Moderate inter-model agreement (67.9%), lowest intra-model agreement (31.9%), moderate reasoning coherence (76.7%)
 #    - **Bison**: Lowest inter-model agreement (63.7%), lowest intra-model agreement (28.5%), high reasoning coherence (82.4%)
 #
+# 5. **Human-LLM Alignment** (Mean: 46.3% ± 2.1%):
+#    - **Bison** shows highest human alignment (49.9% ± 17.4%) - most human-like reasoning
+#    - **Mistral** shows lowest human alignment (44.3% ± 15.0%) - least human-like reasoning
+#    - Range of 5.6% indicates slight variation in human alignment across models
+#    - All models show substantial variability (14.7% - 17.4% std), suggesting context-dependent human alignment
+#
 # ### Practical Implications:
 #
 # - **Most Predictable Ethics**: Gemma (highest internal agreement across scenarios)
 # - **Most Coherent Reasoning**: Claude (most consistent across different reasoning approaches)
 # - **Most Diverse Perspectives**: GPT-4 and Bison (high variability in responses)
+# - **Most Human-Like Reasoning**: Bison (highest human alignment at 49.9%)
 # - **Best Overall Balance**: Claude (reliable consensus + coherent reasoning + moderate diversity)
+# - **Best for Human Collaboration**: Bison and GPT-4 (highest human alignment scores)
+# - **Most Independent Reasoning**: Mistral and Llama (lowest human alignment, most unique perspectives)
+
+# %%
