@@ -461,7 +461,6 @@ def plot_column_similarity_comparison(column_similarities: Dict):
         ax.legend()
 
     ax_box = axes[-1]
-    similarities_data = [data["similarities"] for data in column_similarities.values()]
     
     box_data = []
     for i, (model, data) in enumerate(column_similarities.items()):
@@ -670,7 +669,6 @@ def plot_reason_similarity_comparison(reason_similarities: Dict):
         ax.legend()
 
     ax_box = axes[-1]
-    similarities_data = [data["similarities"] for data in reason_similarities.values()]
 
     box_data = []
     for i, (model, data) in enumerate(reason_similarities.items()):
@@ -1007,8 +1005,7 @@ def plot_human_llm_similarity_comparison(human_llm_similarities: Dict[str, np.nd
         ax.legend()
 
     ax_box = axes[-1]
-    similarities_data = list(human_llm_similarities.values())
-
+    
     box_data = []
     for i, (model, similarities) in enumerate(human_llm_similarities.items()):
         for sim in similarities:
