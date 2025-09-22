@@ -93,7 +93,7 @@ def analyze_row_similarities(
     actors: List[str],
     reason_types: List[str],
 ) -> Dict:
-    """Analyze inter-actor agreement on the same ethical scenarios.
+    """Analyze inter-actor similarity on the same ethical scenarios.
 
     This function compares how different LLM models and human redditors respond to a same ethical dilemma.
     For each scenario (row) in the dataset, it calculates similarities between all possible
@@ -279,7 +279,7 @@ plot_row_similarity_distribution(row_similarities)
 
 # %% Statistical summary of scenario-wise similarities
 def summarize_row_characteristics(row_similarities: Dict):
-    """Provide statistical summary of inter-actor agreement patterns."""
+    """Provide statistical summary of inter-actor similarity patterns."""
 
     print(f"=== SCENARIO-WISE SIMILARITY SUMMARY ===\n")
 
@@ -328,7 +328,7 @@ print(
 
 # %% Display LLM-Human similarity edge cases
 def display_edge_llm_human_similarities(row_similarities: Dict, embeddings_dict: Dict):
-    """Display the top 5 answers with highest and lowest LLM-Human embedding similarity."""
+    """Display the top 5 answers with highest and lowest LLM-Human similarity."""
 
     df_cleaned = pd.read_csv(
         "../data/normative_evaluation_everyday_dilemmas_dataset_cleaned.csv"
@@ -368,11 +368,7 @@ def display_edge_llm_human_similarities(row_similarities: Dict, embeddings_dict:
 
         scenario = df_cleaned.iloc[row_idx]
         scenario_id = scenario["submission_id"]
-        title = (
-            scenario["title"][:100] + "..."
-            if len(scenario["title"]) > 100
-            else scenario["title"]
-        )
+        title = scenario["title"]
 
         human_comment = scenario["top_comment"]
 
@@ -390,12 +386,8 @@ def display_edge_llm_human_similarities(row_similarities: Dict, embeddings_dict:
             f"\n{i}. Similarity: {similarity:.4f} | Scenario ID: {scenario_id} | Model: {llm_model.upper()}"
         )
         print(f"   Title: {title}")
-        print(
-            f"   Human Comment: {human_comment[:200]}{'...' if len(human_comment) > 200 else ''}"
-        )
-        print(
-            f"   {llm_model.upper()} Reasoning: {llm_reason[:200]}{'...' if llm_reason and len(llm_reason) > 200 else ''}"
-        )
+        print(f"   Human Comment: {human_comment}")
+        print(f"   {llm_model.upper()} Reasoning: {llm_reason}")
 
     print("\nTOP 5 HIGHEST SIMILARITY CASES (Most semantically similar answers)")
     print("-" * 60)
@@ -407,11 +399,7 @@ def display_edge_llm_human_similarities(row_similarities: Dict, embeddings_dict:
 
         scenario = df_cleaned.iloc[row_idx]
         scenario_id = scenario["submission_id"]
-        title = (
-            scenario["title"][:100] + "..."
-            if len(scenario["title"]) > 100
-            else scenario["title"]
-        )
+        title = scenario["title"]
 
         human_comment = scenario["top_comment"]
 
@@ -429,34 +417,28 @@ def display_edge_llm_human_similarities(row_similarities: Dict, embeddings_dict:
             f"\n{i}. Similarity: {similarity:.4f} | Scenario ID: {scenario_id} | Model: {llm_model.upper()}"
         )
         print(f"   Title: {title}")
-        print(
-            f"   Human Comment: {human_comment[:200]}{'...' if len(human_comment) > 200 else ''}"
-        )
-        print(
-            f"   {llm_model.upper()} Reasoning: {llm_reason[:200]}{'...' if llm_reason and len(llm_reason) > 200 else ''}"
-        )
+        print(f"   Human Comment: {human_comment}")
+        print(f"   {llm_model.upper()} Reasoning: {llm_reason}")
 
-    return lowest_5, highest_5
+    return
 
 
-lowest_similarities, highest_similarities = display_edge_llm_human_similarities(
-    row_similarities, embeddings_dict
-)
+display_edge_llm_human_similarities(row_similarities, embeddings_dict)
 
 # %% [markdown]
-# ## 2. Column-wise Analysis: Scenario Comparison for Same Actors
+# ## 2. Actor-wise Analysis
 #
-# This analysis compares how similar the embeddings of different scenarios are when processed by the same actor.
-# We'll calculate intra-actor similarities across all scenarios.
+# This analysis compares how a same actor responds to different ethical dilemmas.
+# For each actor, we calculate the similarity between all pairs of scenarios.
 
 
-# %% Column-wise similarity analysis
+# %% Actor-wise similarity analysis
 def analyze_column_similarities(
     embeddings_dict: Dict[str, np.ndarray],
     actors: List[str],
     reason_types: List[str],
 ) -> Dict:
-    """Analyze intra-actor similarity across different ethical scenarios (column-wise analysis).
+    """Analyze intra-actor similarity across different ethical scenarios.
 
     This function measures how consistent each actor is when responding to different
     ethical dilemmas. It calculates the similarity between all pairs of scenarios for
@@ -535,7 +517,7 @@ def analyze_column_similarities(
 column_similarities = analyze_column_similarities(embeddings_dict, actors, reason_types)
 
 
-# %% Visualize column-wise similarities
+# %% Visualize actor-wise similarities
 def plot_column_similarity_comparison(column_similarities: Dict):
     """Compare intra-actor similarity distributions."""
 
@@ -544,7 +526,7 @@ def plot_column_similarity_comparison(column_similarities: Dict):
 
     height_ratios = [2.5] * n_actors + [3]
 
-    fig, axes = plt.subplots(
+    _, axes = plt.subplots(
         n_actors + 1,
         1,
         figsize=(12, 2.5 * n_actors + 3),
@@ -610,11 +592,11 @@ def plot_column_similarity_comparison(column_similarities: Dict):
 plot_column_similarity_comparison(column_similarities)
 
 
-# %% Statistical summary of actor differences
+# %% Statistical summary of actor-wise differences
 def summarize_column_characteristics(column_similarities: Dict):
     """Provide statistical summary of each actor's characteristics."""
 
-    print(f"=== COLUMN-WISE SIMILARITY SUMMARY ===\n")
+    print(f"=== ACTOR-WISE SIMILARITY SUMMARY ===\n")
 
     summary_data = []
     for actor, data in column_similarities.items():
@@ -640,75 +622,58 @@ def summarize_column_characteristics(column_similarities: Dict):
 column_summary_df = summarize_column_characteristics(column_similarities)
 
 # %% Save column-wise analysis results
-# Save column-wise analysis results as JSON
 column_summary_dict = column_summary_df.to_dict("records")
-with open(results_dir / "column_wise_analysis_results.json", "w") as f:
+with open(results_dir / "actor_wise_analysis_results.json", "w") as f:
     json.dump(column_summary_dict, f, indent=2)
 print(
-    f"Column-wise analysis results saved to {results_dir / 'column_wise_analysis_results.json'}"
+    f"Actor-wise analysis results saved to {results_dir / 'actor_wise_analysis_results.json'}"
 )
 
 
-# %% Display extreme scenario similarity cases
-def display_extreme_scenario_similarities(
+# %% Display scenario similarity edge cases
+def display_edge_scenario_similarities(
     embeddings_dict: Dict[str, np.ndarray],
     actors: List[str],
     reason_types: List[str],
 ):
-    """Display the top 5 highest and lowest scenario similarity cases for humans and LLMs."""
+    """Display the top 5 answers with highest and lowest scenario similarity for both humans and LLMs."""
 
-    import pandas as pd
-    import numpy as np
-
-    # For now, we'll create a minimal dataset structure
-    # In a production environment, you might want to use a more efficient data loading approach
-    print("Loading cleaned dataset (164MB file)...")
-
-    # Try to read with minimal memory usage
     try:
         df_cleaned = pd.read_csv(
             "../data/normative_evaluation_everyday_dilemmas_dataset_cleaned.csv",
-            low_memory=True,  # Use low_memory=True for better memory management
+            low_memory=True,
             encoding="utf-8",
             dtype={
                 "submission_id": "string",
                 "title": "string",
                 "top_comment": "string",
-            },  # Specify dtypes to reduce memory
+            },
         )
-        print(f"Successfully loaded dataset with {len(df_cleaned)} rows")
     except MemoryError as e:
         print(f"Memory error loading full dataset: {e}")
-        print("Falling back to chunked reading...")
 
-        # Read only the columns we need
         required_cols = ["submission_id", "title", "top_comment"]
 
-        # Add LLM reason columns dynamically based on actors
         for actor in actors:
             if actor != "human":
-                for i in range(1, 4):  # reason_1, reason_2, reason_3
-                    col_name = f"{actor}_reason_{i}"
-                    required_cols.append(col_name)
+                col_name = f"{actor}_reason_1"
+                required_cols.append(col_name)
 
         chunk_list = []
-        chunk_size = 2000  # Smaller chunks
+        chunk_size = 2000
         for chunk in pd.read_csv(
             "../data/normative_evaluation_everyday_dilemmas_dataset_cleaned.csv",
             chunksize=chunk_size,
-            usecols=required_cols,  # Only load required columns
+            usecols=required_cols,
             encoding="utf-8",
             low_memory=True,
         ):
             chunk_list.append(chunk)
 
         df_cleaned = pd.concat(chunk_list, ignore_index=True)
-        print(f"Successfully loaded dataset in chunks with {len(df_cleaned)} rows")
 
-    # Calculate individual scenario similarities for each actor
     actor_scenario_similarities = {}
 
-    print(f"Calculating extreme scenario similarities for {len(actors)} actors...")
     for actor_idx, actor in enumerate(actors, 1):
         print(f"Processing actor {actor_idx}/{len(actors)}: {actor}")
         available_reasons = []
@@ -730,7 +695,6 @@ def display_extreme_scenario_similarities(
         if not available_reasons:
             continue
 
-        # Calculate mean embeddings for each scenario
         all_reason_embeddings = []
         for reason in available_reasons:
             embeddings = actor_embeddings[reason]
@@ -739,50 +703,33 @@ def display_extreme_scenario_similarities(
         mean_embeddings = np.mean(all_reason_embeddings, axis=0)
         mean_embeddings_norm = normalize(mean_embeddings, norm="l2")
 
-        # Calculate similarities on-the-fly without storing full matrix
         n_scenarios = mean_embeddings_norm.shape[0]
 
-        # Track extreme cases without storing all similarities
-        # Initialize with dummy values that will be replaced
-        lowest_pairs = [(float("inf"), -1, -1)] * 5  # 5 worst cases
-        highest_pairs = [(float("-inf"), -1, -1)] * 5  # 5 best cases
+        lowest_pairs = [(float("inf"), -1, -1)] * 5
+        highest_pairs = [(float("-inf"), -1, -1)] * 5
 
-        # Calculate similarities in chunks to avoid memory issues
-        chunk_size = 500  # Smaller chunks for better memory management
-        n_chunks = (n_scenarios + chunk_size - 1) // chunk_size
-        print(f"  Processing {n_chunks} chunks of {chunk_size} scenarios each...")
+        chunk_size = 500
 
-        for chunk_idx, i in enumerate(range(0, n_scenarios, chunk_size), 1):
-            if chunk_idx % 10 == 0 or chunk_idx == n_chunks:  # Progress every 10 chunks
-                print(f"    Chunk {chunk_idx}/{n_chunks}")
+        for i in range(0, n_scenarios, chunk_size):
             end_i = min(i + chunk_size, n_scenarios)
             chunk_embeddings = mean_embeddings_norm[i:end_i]
 
-            # Calculate similarities for this chunk against all embeddings
             chunk_similarities = cosine_similarity(
                 chunk_embeddings, mean_embeddings_norm
             )
 
-            # Extract upper triangle for this chunk and update extremes
             for local_i, global_i in enumerate(range(i, end_i)):
                 for j in range(global_i + 1, n_scenarios):
                     similarity = chunk_similarities[local_i, j]
 
-                    # Check if this is one of the lowest similarities
-                    if (
-                        similarity < lowest_pairs[-1][0]
-                    ):  # Better than worst in current lowest
+                    if similarity < lowest_pairs[-1][0]:
                         lowest_pairs[-1] = (similarity, global_i, j)
                         lowest_pairs.sort(key=lambda x: x[0])
 
-                    # Check if this is one of the highest similarities
-                    if (
-                        similarity > highest_pairs[0][0]
-                    ):  # Better than worst in current highest
-                        highest_pairs[0] = (similarity, global_i, j)
+                    if similarity > highest_pairs[-1][0]:
+                        highest_pairs[-1] = (similarity, global_i, j)
                         highest_pairs.sort(key=lambda x: x[0], reverse=True)
 
-        # Remove any dummy entries and sort properly
         lowest_pairs = [pair for pair in lowest_pairs if pair[1] != -1]
         highest_pairs = [pair for pair in highest_pairs if pair[1] != -1]
 
@@ -794,12 +741,10 @@ def display_extreme_scenario_similarities(
             "highest": highest_pairs,
         }
 
-    # Extract extreme cases for humans
     human_data = actor_scenario_similarities.get("human", {"lowest": [], "highest": []})
     human_lowest_5 = human_data["lowest"]
     human_highest_5 = human_data["highest"]
 
-    # For LLMs, collect ALL extreme cases from ALL models and find the overall top 5
     all_llm_lowest = []
     all_llm_highest = []
 
@@ -808,59 +753,38 @@ def display_extreme_scenario_similarities(
             actor_data = actor_scenario_similarities.get(
                 actor, {"lowest": [], "highest": []}
             )
-            # Add ALL extreme cases from this actor with actor identification
             for case in actor_data["lowest"]:
                 all_llm_lowest.append((actor, case))
             for case in actor_data["highest"]:
                 all_llm_highest.append((actor, case))
 
-    # Sort by similarity value and take top 5 for each category
-    all_llm_lowest.sort(key=lambda x: x[1][0])  # Sort by similarity (lowest first)
-    all_llm_highest.sort(
-        key=lambda x: x[1][0], reverse=True
-    )  # Sort by similarity (highest first)
+    all_llm_lowest.sort(key=lambda x: x[1][0])
+    all_llm_highest.sort(key=lambda x: x[1][0], reverse=True)
 
     llm_lowest_5 = all_llm_lowest[:5]
     llm_highest_5 = all_llm_highest[:5]
 
     print("=" * 100)
-    print("EXTREME SCENARIO SIMILARITY CASES")
+    print("EDGE SCENARIO SIMILARITY CASES")
     print("=" * 100)
 
-    # Display human extreme cases
-    print("\n👥 HUMAN RESPONSES - EXTREME SCENARIO SIMILARITIES")
+    print("\n👥 HUMAN RESPONSES")
     print("=" * 60)
 
-    print("\n🔴 TOP 5 LOWEST SIMILARITY CASES (Most Different Scenarios)")
+    print("\nTOP 5 LOWEST SIMILARITY CASES (Most semantically different answers)")
     print("-" * 60)
 
     for i, case in enumerate(human_lowest_5, 1):
-        similarity, idx1, idx2 = case  # Unpack tuple (similarity, idx1, idx2)
+        similarity, idx1, idx2 = case
 
         scenario1 = df_cleaned.iloc[idx1]
         scenario2 = df_cleaned.iloc[idx2]
 
-        title1 = (
-            scenario1["title"][:80] + "..."
-            if len(scenario1["title"]) > 80
-            else scenario1["title"]
-        )
-        title2 = (
-            scenario2["title"][:80] + "..."
-            if len(scenario2["title"]) > 80
-            else scenario2["title"]
-        )
+        title1 = scenario1["title"]
+        title2 = scenario2["title"]
 
-        comment1 = (
-            scenario1["top_comment"][:150] + "..."
-            if len(scenario1["top_comment"]) > 150
-            else scenario1["top_comment"]
-        )
-        comment2 = (
-            scenario2["top_comment"][:150] + "..."
-            if len(scenario2["top_comment"]) > 150
-            else scenario2["top_comment"]
-        )
+        comment1 = scenario1["top_comment"]
+        comment2 = scenario2["top_comment"]
 
         print(f"\n{i}. Similarity: {similarity:.4f}")
         print(f"   Scenario 1 (ID: {scenario1['submission_id']}): {title1}")
@@ -868,36 +792,20 @@ def display_extreme_scenario_similarities(
         print(f"   Scenario 2 (ID: {scenario2['submission_id']}): {title2}")
         print(f"   Human Comment 2: {comment2}")
 
-    print("\n🟢 TOP 5 HIGHEST SIMILARITY CASES (Most Similar Scenarios)")
+    print("\nTOP 5 HIGHEST SIMILARITY CASES (Most semantically similar answers)")
     print("-" * 60)
 
     for i, case in enumerate(human_highest_5, 1):
-        similarity, idx1, idx2 = case  # Unpack tuple (similarity, idx1, idx2)
+        similarity, idx1, idx2 = case
 
         scenario1 = df_cleaned.iloc[idx1]
         scenario2 = df_cleaned.iloc[idx2]
 
-        title1 = (
-            scenario1["title"][:80] + "..."
-            if len(scenario1["title"]) > 80
-            else scenario1["title"]
-        )
-        title2 = (
-            scenario2["title"][:80] + "..."
-            if len(scenario2["title"]) > 80
-            else scenario2["title"]
-        )
+        title1 = scenario1["title"]
+        title2 = scenario2["title"]
 
-        comment1 = (
-            scenario1["top_comment"][:150] + "..."
-            if len(scenario1["top_comment"]) > 150
-            else scenario1["top_comment"]
-        )
-        comment2 = (
-            scenario2["top_comment"][:150] + "..."
-            if len(scenario2["top_comment"]) > 150
-            else scenario2["top_comment"]
-        )
+        comment1 = scenario1["top_comment"]
+        comment2 = scenario2["top_comment"]
 
         print(f"\n{i}. Similarity: {similarity:.4f}")
         print(f"   Scenario 1 (ID: {scenario1['submission_id']}): {title1}")
@@ -905,35 +813,25 @@ def display_extreme_scenario_similarities(
         print(f"   Scenario 2 (ID: {scenario2['submission_id']}): {title2}")
         print(f"   Human Comment 2: {comment2}")
 
-    # Display LLM extreme cases
-    print("\n🤖 LLM RESPONSES - EXTREME SCENARIO SIMILARITIES")
+    print("\n🤖 LLM RESPONSES")
     print("=" * 60)
 
-    print("\n🔴 TOP 5 LOWEST SIMILARITY CASES (Most Different Scenarios)")
+    print("\nTOP 5 LOWEST SIMILARITY CASES (Most semantically different answers)")
     print("-" * 60)
 
     for i, (actor, case) in enumerate(llm_lowest_5, 1):
-        similarity, idx1, idx2 = case  # Unpack tuple (similarity, idx1, idx2)
+        similarity, idx1, idx2 = case
 
         scenario1 = df_cleaned.iloc[idx1]
         scenario2 = df_cleaned.iloc[idx2]
 
-        title1 = (
-            scenario1["title"][:80] + "..."
-            if len(scenario1["title"]) > 80
-            else scenario1["title"]
-        )
-        title2 = (
-            scenario2["title"][:80] + "..."
-            if len(scenario2["title"]) > 80
-            else scenario2["title"]
-        )
+        title1 = scenario1["title"]
+        title2 = scenario2["title"]
 
         print(f"\n{i}. Similarity: {similarity:.4f} | Model: {actor.upper()}")
         print(f"   Scenario 1 (ID: {scenario1['submission_id']}): {title1}")
         print(f"   Scenario 2 (ID: {scenario2['submission_id']}): {title2}")
 
-        # Get LLM reasoning for both scenarios for this specific model
         llm_reason1 = None
         llm_reason2 = None
         for reason_col in [
@@ -954,46 +852,29 @@ def display_extreme_scenario_similarities(
             ):
                 llm_reason2 = scenario2[reason_col]
 
-        reason1_preview = (
-            llm_reason1[:150] + "..."
-            if llm_reason1 and len(llm_reason1) > 150
-            else llm_reason1
-        )
-        reason2_preview = (
-            llm_reason2[:150] + "..."
-            if llm_reason2 and len(llm_reason2) > 150
-            else llm_reason2
-        )
+        reason1_preview = llm_reason1
+        reason2_preview = llm_reason2
 
         print(f"   {actor.upper()} Reasoning:")
         print(f"     Scenario 1: {reason1_preview}")
         print(f"     Scenario 2: {reason2_preview}")
 
-    print("\n🟢 TOP 5 HIGHEST SIMILARITY CASES (Most Similar Scenarios)")
+    print("\nTOP 5 HIGHEST SIMILARITY CASES (Most semantically similar answers)")
     print("-" * 60)
 
     for i, (actor, case) in enumerate(llm_highest_5, 1):
-        similarity, idx1, idx2 = case  # Unpack tuple (similarity, idx1, idx2)
+        similarity, idx1, idx2 = case
 
         scenario1 = df_cleaned.iloc[idx1]
         scenario2 = df_cleaned.iloc[idx2]
 
-        title1 = (
-            scenario1["title"][:80] + "..."
-            if len(scenario1["title"]) > 80
-            else scenario1["title"]
-        )
-        title2 = (
-            scenario2["title"][:80] + "..."
-            if len(scenario2["title"]) > 80
-            else scenario2["title"]
-        )
+        title1 = scenario1["title"]
+        title2 = scenario2["title"]
 
         print(f"\n{i}. Similarity: {similarity:.4f} | Model: {actor.upper()}")
         print(f"   Scenario 1 (ID: {scenario1['submission_id']}): {title1}")
         print(f"   Scenario 2 (ID: {scenario2['submission_id']}): {title2}")
 
-        # Get LLM reasoning for both scenarios for this specific model
         llm_reason1 = None
         llm_reason2 = None
         for reason_col in [
@@ -1014,48 +895,17 @@ def display_extreme_scenario_similarities(
             ):
                 llm_reason2 = scenario2[reason_col]
 
-        reason1_preview = (
-            llm_reason1[:150] + "..."
-            if llm_reason1 and len(llm_reason1) > 150
-            else llm_reason1
-        )
-        reason2_preview = (
-            llm_reason2[:150] + "..."
-            if llm_reason2 and len(llm_reason2) > 150
-            else llm_reason2
-        )
+        reason1_preview = llm_reason1
+        reason2_preview = llm_reason2
 
         print(f"   {actor.upper()} Reasoning:")
         print(f"     Scenario 1: {reason1_preview}")
         print(f"     Scenario 2: {reason2_preview}")
 
-    # Summary statistics
-    print("\n📊 SUMMARY STATISTICS:")
-    print("-" * 40)
-    print(f"Human extreme cases found: {len(human_lowest_5) + len(human_highest_5)}")
-    print(f"LLM extreme cases found: {len(llm_lowest_5) + len(llm_highest_5)}")
-
-    if human_lowest_5 and human_highest_5:
-        print(
-            f"Human similarity range: {human_lowest_5[0][0]:.4f} - {human_highest_5[-1][0]:.4f}"
-        )
-    if llm_lowest_5 and llm_highest_5:
-        print(
-            f"LLM similarity range: {llm_lowest_5[0][1][0]:.4f} - {llm_highest_5[-1][1][0]:.4f}"
-        )
-
-    return {
-        "human_lowest": human_lowest_5,
-        "human_highest": human_highest_5,
-        "llm_lowest": llm_lowest_5,
-        "llm_highest": llm_highest_5,
-    }
+    return
 
 
-# Display extreme scenario similarity cases
-extreme_scenario_cases = display_extreme_scenario_similarities(
-    embeddings_dict, actors, reason_types
-)
+display_edge_scenario_similarities(embeddings_dict, actors, reason_types)
 
 # %% [markdown]
 # ## 3. Reason-wise Analysis: Different Reasoning Approaches for Same Actor-Scenario
