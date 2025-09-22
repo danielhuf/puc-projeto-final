@@ -1,17 +1,17 @@
 # %% [markdown]
-# Embedding Similarity Analysis
+### Embedding Similarity Analysis
 #
-# This notebook analyzes similarities in the embeddings dataset in three main ways:
-# 1. **Scenario-wise analysis**: Compare different actors' responses for the same scenario/dilemma
-# 2. **Actor-wise analysis**: Compare different scenarios/dilemmas for the same actor
-# 3. **Reason-wise analysis**: Compare different reasoning versions for the same actor in the same scenario
+# This notebook analyzes similarities between the embeddings of the ethical dilemma dataset in three main ways:
+# 1. **Scenario-wise analysis**: Compare different actors' responses to the same scenario (ethical dilemma)
+# 2. **Actor-wise analysis**: Compare a same actor's responses to different scenarios
+# 3. **Reason-wise analysis**: Compare different reasoning versions for a same actor in the same scenario
 #
-# The dataset contains embeddings from multiple actors (GPT-3.5, GPT-4, Claude, Bison, Gemma, Mistral, Llama)
-# responding to normative evaluation scenarios.
+# The actors considered for this analysis are:
+# - **LLM Models**: GPT-3.5, GPT-4, Claude Haiku, PaLM 2 Bison, Gemma 7B, Mistral 7B, and Llama 2.
+# - **Human Redditors**: The author of the top comment of each scenario submission.
 # %% Import libraries
 import pandas as pd
 import numpy as np
-
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics.pairwise import cosine_similarity
@@ -81,27 +81,26 @@ actors = sorted(list(actors))
 reason_types = sorted(list(reason_types))
 
 # %% [markdown]
-# ## 1. Row-wise Analysis: Actor Comparison for Same Scenarios
+# ## 1. Scenario-wise Analysis
 #
 # This analysis compares how human redditors and LLM models respond to the same ethical dilemma.
-# For each row (scenario), we calculate similarities between all actor pairs.
+# For each scenario (row), embedding similarities are calculated between all pairs of actors.
 
 
-# %% Row-wise similarity analysis
+# %% Scenario-wise similarity analysis
 def analyze_row_similarities(
     embeddings_dict: Dict[str, np.ndarray],
     actors: List[str],
     reason_types: List[str],
 ) -> Dict:
-    """Analyze inter-actor agreement on the same ethical scenarios (row-wise analysis).
+    """Analyze inter-actor agreement on the same ethical scenarios.
 
-    This function compares how different LLM models and human redditors respond to identical ethical dilemmas.
+    This function compares how different LLM models and human redditors respond to a same ethical dilemma.
     For each scenario (row) in the dataset, it calculates similarities between all possible
     actor pairs by comparing their reasoning embeddings.
 
     The analysis accounts for actors having different numbers of reasoning approaches
-    (reason_1, reason_2, etc.) by comparing all available combinations and taking the
-    mean similarity.
+    by comparing all available combinations and taking the mean similarity.
 
     Args:
         embeddings_dict: Dictionary mapping column names to embedding arrays
@@ -149,11 +148,9 @@ def analyze_row_similarities(
 
         for j, actor1 in enumerate(actor_names):
             for actor2 in actor_names[j + 1 :]:
-                # Get all available reason types for both actors
                 actor1_reasons = actor_reason_combinations[actor1]
                 actor2_reasons = actor_reason_combinations[actor2]
 
-                # Calculate similarities between all combinations
                 pair_similarities = []
                 for reason1 in actor1_reasons:
                     for reason2 in actor2_reasons:
@@ -188,9 +185,9 @@ def analyze_row_similarities(
 
 cache_path = Path("../results/row_similarities.pkl")
 if cache_path.exists():
-    print("Loading row_similarities from cache...")
     with open(cache_path, "rb") as f:
         row_similarities = pickle.load(f)
+    print(f"row_similarities loaded from cache")
 else:
     row_similarities = analyze_row_similarities(embeddings_dict, actors, reason_types)
     with open(cache_path, "wb") as f:
@@ -198,11 +195,11 @@ else:
     print(f"Saved row_similarities to {cache_path}")
 
 
-# %% Visualize row-wise similarities
+# %% Visualize scenario-wise similarities
 def plot_row_similarity_distribution(row_similarities: Dict):
-    """Plot distribution of similarities across rows.
+    """Plot distribution of similarities across scenarios.
 
-    Shows mean similarities across all available reason type combinations
+    Displays mean similarities across all available reason type combinations
     for each actor pair.
     """
 
@@ -217,7 +214,7 @@ def plot_row_similarity_distribution(row_similarities: Dict):
     n_cols = min(4, n_pairs)
     n_rows = (n_pairs + n_cols - 1) // n_cols
 
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(4 * n_cols, 3 * n_rows))
+    _, axes = plt.subplots(n_rows, n_cols, figsize=(4 * n_cols, 3 * n_rows))
 
     if n_pairs == 1:
         axes = [axes]
@@ -270,7 +267,7 @@ def plot_row_similarity_distribution(row_similarities: Dict):
 
     plt.tight_layout()
     plt.suptitle(
-        f"Distribution of Row-wise Similarities Between Actors\n({n_pairs} pairs)",
+        f"Distribution of scenario-wise similarities between actors\n({n_pairs} pairs)",
         y=1.02,
         fontsize=16,
     )
@@ -280,11 +277,11 @@ def plot_row_similarity_distribution(row_similarities: Dict):
 plot_row_similarity_distribution(row_similarities)
 
 
-# %% Statistical summary of row-wise similarities
+# %% Statistical summary of scenario-wise similarities
 def summarize_row_characteristics(row_similarities: Dict):
     """Provide statistical summary of inter-actor agreement patterns."""
 
-    print(f"=== ROW-WISE SIMILARITY SUMMARY ===\n")
+    print(f"=== SCENARIO-WISE SIMILARITY SUMMARY ===\n")
 
     pair_stats = {}
     for row_data in row_similarities.values():
@@ -317,33 +314,26 @@ def summarize_row_characteristics(row_similarities: Dict):
 
 row_summary_df = summarize_row_characteristics(row_similarities)
 
-# %% Save row-wise analysis results
-# Create results directory if it doesn't exist
+# %% Save scenario-wise analysis results
 results_dir = Path("../results")
 results_dir.mkdir(exist_ok=True)
 
-# Save row-wise analysis results as JSON
 row_summary_dict = row_summary_df.to_dict("records")
-with open(results_dir / "row_wise_analysis_results.json", "w") as f:
+with open(results_dir / "scenario_wise_analysis_results.json", "w") as f:
     json.dump(row_summary_dict, f, indent=2)
 print(
-    f"Row-wise analysis results saved to {results_dir / 'row_wise_analysis_results.json'}"
+    f"Scenario-wise analysis results saved to {results_dir / 'scenario_wise_analysis_results.json'}"
 )
 
 
-# %% Display extreme LLM-Human similarity cases
-def display_extreme_llm_human_similarities(
-    row_similarities: Dict, embeddings_dict: Dict
-):
-    """Display the top 5 highest and lowest LLM-Human similarity cases with actual sentences."""
-
-    import pandas as pd
+# %% Display LLM-Human similarity edge cases
+def display_edge_llm_human_similarities(row_similarities: Dict, embeddings_dict: Dict):
+    """Display the top 5 answers with highest and lowest LLM-Human embedding similarity."""
 
     df_cleaned = pd.read_csv(
         "../data/normative_evaluation_everyday_dilemmas_dataset_cleaned.csv"
     )
 
-    # Extract all LLM-Human similarity scores
     llm_human_similarities = []
 
     for row_idx, row_data in row_similarities.items():
@@ -359,18 +349,16 @@ def display_extreme_llm_human_similarities(
                     }
                 )
 
-    # Sort by similarity
     llm_human_similarities.sort(key=lambda x: x["similarity"])
 
-    # Get top 5 lowest and highest
     lowest_5 = llm_human_similarities[:5]
     highest_5 = llm_human_similarities[-5:]
 
     print("=" * 80)
-    print("EXTREME LLM-HUMAN SIMILARITY CASES")
+    print("EDGE LLM-HUMAN SIMILARITY CASES")
     print("=" * 80)
 
-    print("\n🔴 TOP 5 LOWEST SIMILARITY CASES (Most Different)")
+    print("\nTOP 5 LOWEST SIMILARITY CASES (Most semantically different answers)")
     print("-" * 60)
 
     for i, case in enumerate(lowest_5, 1):
@@ -378,7 +366,6 @@ def display_extreme_llm_human_similarities(
         llm_model = case["llm_model"]
         similarity = case["similarity"]
 
-        # Get scenario info
         scenario = df_cleaned.iloc[row_idx]
         scenario_id = scenario["submission_id"]
         title = (
@@ -387,10 +374,8 @@ def display_extreme_llm_human_similarities(
             else scenario["title"]
         )
 
-        # Get human comment
         human_comment = scenario["top_comment"]
 
-        # Get LLM reasoning (try different reason columns)
         llm_reason = None
         for reason_col in [
             f"{llm_model}_reason_1",
@@ -402,9 +387,8 @@ def display_extreme_llm_human_similarities(
                 break
 
         print(
-            f"\n{i}. Similarity: {similarity:.4f} | Row: {row_idx} | Model: {llm_model.upper()}"
+            f"\n{i}. Similarity: {similarity:.4f} | Scenario ID: {scenario_id} | Model: {llm_model.upper()}"
         )
-        print(f"   Scenario ID: {scenario_id}")
         print(f"   Title: {title}")
         print(
             f"   Human Comment: {human_comment[:200]}{'...' if len(human_comment) > 200 else ''}"
@@ -413,7 +397,7 @@ def display_extreme_llm_human_similarities(
             f"   {llm_model.upper()} Reasoning: {llm_reason[:200]}{'...' if llm_reason and len(llm_reason) > 200 else ''}"
         )
 
-    print("\n🟢 TOP 5 HIGHEST SIMILARITY CASES (Most Similar)")
+    print("\nTOP 5 HIGHEST SIMILARITY CASES (Most semantically similar answers)")
     print("-" * 60)
 
     for i, case in enumerate(highest_5, 1):
@@ -421,7 +405,6 @@ def display_extreme_llm_human_similarities(
         llm_model = case["llm_model"]
         similarity = case["similarity"]
 
-        # Get scenario info
         scenario = df_cleaned.iloc[row_idx]
         scenario_id = scenario["submission_id"]
         title = (
@@ -430,10 +413,8 @@ def display_extreme_llm_human_similarities(
             else scenario["title"]
         )
 
-        # Get human comment
         human_comment = scenario["top_comment"]
 
-        # Get LLM reasoning (try different reason columns)
         llm_reason = None
         for reason_col in [
             f"{llm_model}_reason_1",
@@ -445,9 +426,8 @@ def display_extreme_llm_human_similarities(
                 break
 
         print(
-            f"\n{i}. Similarity: {similarity:.4f} | Row: {row_idx} | Model: {llm_model.upper()}"
+            f"\n{i}. Similarity: {similarity:.4f} | Scenario ID: {scenario_id} | Model: {llm_model.upper()}"
         )
-        print(f"   Scenario ID: {scenario_id}")
         print(f"   Title: {title}")
         print(
             f"   Human Comment: {human_comment[:200]}{'...' if len(human_comment) > 200 else ''}"
@@ -456,20 +436,10 @@ def display_extreme_llm_human_similarities(
             f"   {llm_model.upper()} Reasoning: {llm_reason[:200]}{'...' if llm_reason and len(llm_reason) > 200 else ''}"
         )
 
-    # Summary of models in extreme cases
-    all_extreme_models = [case["llm_model"] for case in lowest_5 + highest_5]
-    model_counts = pd.Series(all_extreme_models).value_counts()
-
-    print("\n📊 LLM MODELS IN EXTREME SIMILARITY CASES:")
-    print("-" * 40)
-    for model, count in model_counts.items():
-        print(f"   {model.upper()}: {count} cases")
-
     return lowest_5, highest_5
 
 
-# Display extreme cases
-lowest_similarities, highest_similarities = display_extreme_llm_human_similarities(
+lowest_similarities, highest_similarities = display_edge_llm_human_similarities(
     row_similarities, embeddings_dict
 )
 
