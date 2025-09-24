@@ -908,10 +908,9 @@ def display_edge_scenario_similarities(
 display_edge_scenario_similarities(embeddings_dict, actors, reason_types)
 
 # %% [markdown]
-# ## 3. Reason-wise Analysis: Different Reasoning Approaches for Same Actor-Scenario
+# ## 3. Reason-wise Analysis
 #
-# This analysis compares how consistent each actor is across its different reasoning
-# approaches for the same ethical scenarios.
+# This analysis compares how consistent each actor's reasonings are when answering the same ethical dilemma.
 
 
 # %% Reason-wise similarity analysis
@@ -984,11 +983,10 @@ def analyze_reason_similarities(
 
         n_rows = actor_embeddings[available_reasons[0]].shape[0]
 
-        # Calculate similarities between all reason pairs for each scenario
         all_similarities = []
 
         for i, reason1 in enumerate(available_reasons):
-            for reason2 in available_reasons[i + 1 :]:  # Only unique pairs
+            for reason2 in available_reasons[i + 1 :]:
                 pair_similarities = []
                 for row_idx in tqdm(
                     range(n_rows), desc=f"Processing {actor} reason pairs", leave=False
@@ -1018,9 +1016,9 @@ def analyze_reason_similarities(
 
 cache_path = Path("../results/reason_similarities.pkl")
 if cache_path.exists():
-    print("Loading reason_similarities from cache...")
     with open(cache_path, "rb") as f:
         reason_similarities = pickle.load(f)
+    print(f"reason_similarities loaded from cache")
 else:
     reason_similarities = analyze_reason_similarities(
         embeddings_dict, actors, reason_types
@@ -1039,7 +1037,7 @@ def plot_reason_similarity_comparison(reason_similarities: Dict):
 
     height_ratios = [2.5] * n_actors + [3]
 
-    fig, axes = plt.subplots(
+    _, axes = plt.subplots(
         n_actors + 1,
         1,
         figsize=(12, 2.5 * n_actors + 3),
@@ -1113,10 +1111,6 @@ plot_reason_similarity_comparison(reason_similarities)
 def summarize_reason_characteristics(reason_similarities: Dict):
     """Provide statistical summary of each actor's reason-wise characteristics."""
 
-    if not reason_similarities:
-        print("No reason-wise data available for analysis")
-        return pd.DataFrame()
-
     print(f"=== REASON-WISE SIMILARITY SUMMARY ===\n")
 
     summary_data = []
@@ -1144,7 +1138,6 @@ def summarize_reason_characteristics(reason_similarities: Dict):
 reason_summary_df = summarize_reason_characteristics(reason_similarities)
 
 # %% Save reason-wise analysis results
-# Save reason-wise analysis results as JSON
 reason_summary_dict = reason_summary_df.to_dict("records")
 with open(results_dir / "reason_wise_analysis_results.json", "w") as f:
     json.dump(reason_summary_dict, f, indent=2)
@@ -1216,7 +1209,7 @@ def cross_analyze_actor_similarity(
 
     plt.colorbar(scatter, label="Reason Consistency Score")
 
-    for i, row in plot_df.iterrows():
+    for _, row in plot_df.iterrows():
         plt.annotate(
             row["Actor"],
             (row["Intra-Actor_Diversity_Score"], row["Inter-Actor_Similarity_Score"]),
@@ -1235,7 +1228,7 @@ def cross_analyze_actor_similarity(
     plt.tight_layout()
     plt.show()
 
-    print("=== COMPLETE ANALYSIS RESULTS ===")
+    print("=== CROSS-ANALYSIS RESULTS ===")
     display_cols = [
         "Actor",
         "Intra-Actor_Diversity_Score",
@@ -1252,7 +1245,6 @@ cross_analysis_df = cross_analyze_actor_similarity(
 )
 
 # %% Save cross-analysis results
-# Save cross-analysis results as JSON
 cross_analysis_dict = cross_analysis_df.to_dict("records")
 with open(results_dir / "cross_analysis_results.json", "w") as f:
     json.dump(cross_analysis_dict, f, indent=2)
@@ -1272,12 +1264,12 @@ print(f"Cross-analysis results saved to {results_dir / 'cross_analysis_results.j
 #    - **Human responses** show much lower agreement with LLMs (40.1% - 46.9% similarity)
 #    - Human-LLM alignment is consistently lower than inter-LLM agreement, indicating distinct reasoning patterns
 #
-# 2. **Intra-Actor Consistency** (Range: 18.4% - 49.8%):
-#    - **Gemma** is most internally consistent (49.8% ± 10.1%) - most predictable across scenarios
+# 2. **Intra-Actor Agreement** (Range: 18.4% - 49.8%):
+#    - **Gemma** shows highest intra-actor agreement (49.8% ± 10.1%) - most predictable across scenarios
 #    - **Human** responses are least internally consistent (18.4% ± 12.2%) - most context-dependent
-#    - **GPT-4** shows low internal consistency (31.9% ± 12.4%) - most diverse across scenarios
-#    - **Bison** shows moderate internal consistency (28.5% ± 12.1%) - balanced variability
-#    - Internal consistency range of 31.4% indicates significant diversity in actor response patterns
+#    - **GPT-4** shows low intra-actor agreement (31.9% ± 12.4%) - most diverse across scenarios
+#    - **Bison** shows moderate intra-actor agreement (28.5% ± 12.1%) - balanced variability
+#    - Internal agreement range of 31.4% indicates significant diversity in actor response patterns
 #
 # 3. **Reason-wise Consistency** (Range: 72.9% - 100%):
 #    - **Human** shows perfect reasoning consistency (100%) - single reasoning approach per scenario
@@ -1287,11 +1279,11 @@ print(f"Cross-analysis results saved to {results_dir / 'cross_analysis_results.j
 #    - This indicates actors are more consistent within reasoning types than across different scenarios
 #
 # 4. **Three-Dimensional Actor Profiles**:
-#    - **Claude**: High inter-actor agreement (69.7%), moderate intra-actor consistency (43.1%), highest reasoning coherence (90.6%)
-#    - **Gemma**: Moderate inter-actor agreement (65.4%), highest intra-actor consistency (49.8%), moderate reasoning coherence (76.4%)
-#    - **GPT-4**: Moderate inter-actor agreement (64.7%), lowest intra-actor consistency (31.9%), moderate reasoning coherence (76.7%)
-#    - **Bison**: Lowest inter-actor agreement (61.3%), low intra-actor consistency (28.5%), high reasoning coherence (82.4%)
-#    - **Human**: Low inter-actor agreement (43.4%), lowest intra-actor consistency (18.4%), perfect reasoning coherence (100%)
+#    - **Claude**: High inter-actor agreement (69.7%), moderate intra-actor agreement (43.1%), highest reasoning consistency (90.6%)
+#    - **Gemma**: Moderate inter-actor agreement (65.4%), highest intra-actor agreement (49.8%), moderate reasoning consistency (76.4%)
+#    - **GPT-4**: Moderate inter-actor agreement (64.7%), lowest intra-actor agreement (31.9%), moderate reasoning consistency (76.7%)
+#    - **Bison**: Lowest inter-actor agreement (61.3%), low intra-actor agreement (28.5%), high reasoning consistency (82.4%)
+#    - **Human**: Low inter-actor agreement (43.4%), lowest intra-actor agreement (18.4%), perfect reasoning consistency (100%)
 #
 # 5. **Human-LLM Alignment** (Range: 40.1% - 46.9%):
 #    - **Bison** shows highest human alignment (46.9% ± 16.5%) - most human-like reasoning
