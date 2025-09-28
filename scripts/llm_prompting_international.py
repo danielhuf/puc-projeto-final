@@ -3,7 +3,6 @@ import pandas as pd
 from pathlib import Path
 import os
 import openai
-import time
 import json
 from tqdm import tqdm
 from dotenv import load_dotenv
@@ -54,6 +53,8 @@ def process_pair(
     reason_col,
     progress_bar,
     pair_name,
+    model="gpt-3.5-turbo",
+    temperature=0.3,
 ):
     """
     Process a single pair of columns (label and reason) for a row.
@@ -63,11 +64,13 @@ def process_pair(
         idx: Row index
         row: Current row data
         system_message: System prompt for LLM
-        user_message: User message (selftext)
+        user_message: User message
         label_col: Name of label column
         reason_col: Name of reason column
         progress_bar: tqdm progress bar
-        pair_name: Name for progress tracking (e.g., "pair1")
+        pair_name: Name for progress tracking
+        model: Model to use
+        temperature: Temperature for response generation
 
     Returns:
         None (updates dataframe in place)
@@ -75,7 +78,7 @@ def process_pair(
     if pd.notna(row[label_col]) or pd.notna(row[reason_col]):
         progress_bar.set_postfix(**{pair_name: "skipped"})
     else:
-        response = prompt_gpt35(system_message, user_message)
+        response = prompt_gpt(system_message, user_message, model, temperature)
         verdict, reasoning = parse_structured_response(response)
         df.at[idx, label_col] = verdict
         df.at[idx, reason_col] = reasoning
@@ -88,32 +91,51 @@ def process_pair(
             progress_bar.set_postfix(**{pair_name: "failed"})
 
 
-def prompt_gpt35(system_message: str, user_message: str) -> str:
+def prompt_gpt(
+    system_message: str,
+    user_message: str,
+    model: str = "gpt-3.5-turbo",
+    temperature: float = 0.3,
+) -> str:
     """
-    Send prompt to GPT-3.5 and return the response.
+    Send prompt to GPT model and return the response.
 
     Args:
         system_message: System prompt for the model
         user_message: User message (selftext)
+        model: Model to use (gpt-3.5-turbo or gpt-4o-mini)
+        temperature: Temperature for response generation (0.0-2.0)
 
     Returns:
-        Response from GPT-3.5
+        Response from the specified GPT model
     """
     try:
         client = openai.OpenAI()
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model=model,
             messages=[
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": user_message},
             ],
             max_tokens=2000,
-            temperature=0.3,
+            temperature=temperature,
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
         print(f"Error calling OpenAI API: {e}")
         return "ERROR: API call failed"
+
+
+def add_column_if_not_exists(df: pd.DataFrame, column_name: str) -> None:
+    """
+    Add a column to the DataFrame if it doesn't already exist.
+
+    Args:
+        df: DataFrame to modify
+        column_name: Name of the column to add
+    """
+    if column_name not in df.columns:
+        df[column_name] = pd.Series(dtype="object")
 
 
 def get_system_message(language_code: str) -> str:
@@ -240,14 +262,19 @@ def process_dataset(language_code: str) -> None:
 
     print(f"Processing {language_code.upper()} dataset...")
 
-    if "gpt3.5_label_1" not in df.columns:
-        df["gpt3.5_label_1"] = pd.Series(dtype="object")
-    if "gpt3.5_reason_1" not in df.columns:
-        df["gpt3.5_reason_1"] = pd.Series(dtype="object")
-    if "gpt3.5_label_2" not in df.columns:
-        df["gpt3.5_label_2"] = pd.Series(dtype="object")
-    if "gpt3.5_reason_2" not in df.columns:
-        df["gpt3.5_reason_2"] = pd.Series(dtype="object")
+    columns_to_add = [
+        "gpt3.5_label_1",
+        "gpt3.5_reason_1",
+        "gpt3.5_label_2",
+        "gpt3.5_reason_2",
+        "gpt4_label_1",
+        "gpt4_reason_1",
+        "gpt4_label_2",
+        "gpt4_reason_2",
+    ]
+
+    for column in columns_to_add:
+        add_column_if_not_exists(df, column)
 
     system_message = get_system_message(language_code)
 
@@ -268,7 +295,9 @@ def process_dataset(language_code: str) -> None:
             "gpt3.5_label_1",
             "gpt3.5_reason_1",
             progress_bar,
-            "pair1",
+            "gpt3.5_pair1",
+            "gpt-3.5-turbo",
+            0.3,
         )
 
         process_pair(
@@ -280,7 +309,37 @@ def process_dataset(language_code: str) -> None:
             "gpt3.5_label_2",
             "gpt3.5_reason_2",
             progress_bar,
-            "pair2",
+            "gpt3.5_pair2",
+            "gpt-3.5-turbo",
+            0.3,
+        )
+
+        process_pair(
+            df,
+            idx,
+            row,
+            system_message,
+            user_message,
+            "gpt4_label_1",
+            "gpt4_reason_1",
+            progress_bar,
+            "gpt4_pair1",
+            "gpt-4o-mini",
+            0.7,
+        )
+
+        process_pair(
+            df,
+            idx,
+            row,
+            system_message,
+            user_message,
+            "gpt4_label_2",
+            "gpt4_reason_2",
+            progress_bar,
+            "gpt4_pair2",
+            "gpt-4o-mini",
+            0.7,
         )
 
         df.to_csv(file_path, index=False)
