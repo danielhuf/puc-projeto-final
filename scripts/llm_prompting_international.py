@@ -3,6 +3,7 @@ import pandas as pd
 from pathlib import Path
 import os
 import openai
+import anthropic
 import json
 from tqdm import tqdm
 from dotenv import load_dotenv
@@ -17,12 +18,20 @@ def setup_openai():
         raise ValueError("Please set your OPENAI_API_KEY environment variable")
 
 
+def setup_anthropic():
+    """Setup Anthropic API client."""
+    anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+    if not anthropic_key:
+        raise ValueError("Please set your ANTHROPIC_API_KEY environment variable")
+    return anthropic.Anthropic(api_key=anthropic_key)
+
+
 def parse_structured_response(response_text: str) -> tuple[str, str]:
     """
-    Parse the structured JSON response from GPT-3.5.
+    Parse the structured JSON response from LLM models.
 
     Args:
-        response_text: JSON response from GPT-3.5
+        response_text: JSON response from LLM
 
     Returns:
         Tuple of (verdict, reasoning)
@@ -34,12 +43,13 @@ def parse_structured_response(response_text: str) -> tuple[str, str]:
 
         valid_verdicts = ["YTA", "NTA", "ESH", "NAH", "INFO"]
         verdict = verdict if verdict in valid_verdicts else None
-        reasoning = reasoning if reasoning and len(reasoning.strip()) >= 10 else None
+        reasoning = reasoning if reasoning and len(reasoning.strip()) >= 5 else None
 
         return verdict, reasoning
 
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
         print(f"Failed to parse JSON response: {response_text}")
+        print(f"JSON Error: {e}")
         return None, None
 
 
@@ -54,7 +64,7 @@ def process_pair(
     progress_bar,
     pair_name,
     model="gpt-3.5-turbo",
-    temperature=0.3,
+    temperature=0.7,
 ):
     """
     Process a single pair of columns (label and reason) for a row.
@@ -78,7 +88,11 @@ def process_pair(
     if pd.notna(row[label_col]) or pd.notna(row[reason_col]):
         progress_bar.set_postfix(**{pair_name: "skipped"})
     else:
-        response = prompt_gpt(system_message, user_message, model, temperature)
+        if model == "claude":
+            response = prompt_claude(system_message, user_message, temperature)
+        else:
+            response = prompt_gpt(system_message, user_message, model, temperature)
+
         verdict, reasoning = parse_structured_response(response)
         df.at[idx, label_col] = verdict
         df.at[idx, reason_col] = reasoning
@@ -126,6 +140,37 @@ def prompt_gpt(
         return "ERROR: API call failed"
 
 
+def prompt_claude(
+    system_message: str,
+    user_message: str,
+    temperature: float = 0.3,
+) -> str:
+    """
+    Send prompt to Claude Haiku 3 and return the response.
+
+    Args:
+        system_message: System prompt for the model
+        user_message: User message (selftext)
+        temperature: Temperature for response generation (0.0-1.0)
+
+    Returns:
+        Response from Claude Haiku 3
+    """
+    try:
+        client = setup_anthropic()
+        response = client.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=2000,
+            temperature=temperature,
+            system=system_message,
+            messages=[{"role": "user", "content": user_message}],
+        )
+        return response.content[0].text.strip()
+    except Exception as e:
+        print(f"Error calling Anthropic API: {e}")
+        return "ERROR: API call failed"
+
+
 def add_column_if_not_exists(df: pd.DataFrame, column_name: str) -> None:
     """
     Add a column to the DataFrame if it doesn't already exist.
@@ -136,6 +181,8 @@ def add_column_if_not_exists(df: pd.DataFrame, column_name: str) -> None:
     """
     if column_name not in df.columns:
         df[column_name] = pd.Series(dtype="object")
+    else:
+        df[column_name] = df[column_name].astype("object")
 
 
 def get_system_message(language_code: str) -> str:
@@ -271,6 +318,10 @@ def process_dataset(language_code: str) -> None:
         "gpt4_reason_1",
         "gpt4_label_2",
         "gpt4_reason_2",
+        "claude_label_1",
+        "claude_reason_1",
+        "claude_label_2",
+        "claude_reason_2",
     ]
 
     for column in columns_to_add:
@@ -279,8 +330,8 @@ def process_dataset(language_code: str) -> None:
     system_message = get_system_message(language_code)
 
     progress_bar = tqdm(
-        df.head(5).iterrows(),
-        total=5,
+        df.head(2).iterrows(),
+        total=2,
         desc=f"Processing {language_code.upper()}",
     )
     for idx, row in progress_bar:
@@ -297,7 +348,7 @@ def process_dataset(language_code: str) -> None:
             progress_bar,
             "gpt3.5_pair1",
             "gpt-3.5-turbo",
-            0.3,
+            0.7,
         )
 
         process_pair(
@@ -311,7 +362,7 @@ def process_dataset(language_code: str) -> None:
             progress_bar,
             "gpt3.5_pair2",
             "gpt-3.5-turbo",
-            0.3,
+            0.7,
         )
 
         process_pair(
@@ -342,17 +393,45 @@ def process_dataset(language_code: str) -> None:
             0.7,
         )
 
+        process_pair(
+            df,
+            idx,
+            row,
+            system_message,
+            user_message,
+            "claude_label_1",
+            "claude_reason_1",
+            progress_bar,
+            "claude_pair1",
+            "claude",
+            0.7,
+        )
+
+        process_pair(
+            df,
+            idx,
+            row,
+            system_message,
+            user_message,
+            "claude_label_2",
+            "claude_reason_2",
+            progress_bar,
+            "claude_pair2",
+            "claude",
+            0.7,
+        )
+
         df.to_csv(file_path, index=False)
 
     print(f"Completed processing {language_code.upper()} dataset")
 
 
 def main() -> None:
-    """Main function to process all datasets with GPT-3.5."""
     script_dir = Path(__file__).parent
     os.chdir(script_dir.parent)
 
     setup_openai()
+    setup_anthropic()
 
     language_configs = ["br", "de", "es", "fr"]
 
