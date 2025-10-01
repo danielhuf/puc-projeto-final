@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
+import os
+import warnings
+import logging
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+warnings.filterwarnings("ignore", category=UserWarning)
+logging.getLogger("google").setLevel(logging.ERROR)
+
 import pandas as pd
 from pathlib import Path
-import os
 import openai
 import anthropic
+import google.generativeai as genai
 import json
 from tqdm import tqdm
 from dotenv import load_dotenv
@@ -26,6 +34,15 @@ def setup_anthropic():
     return anthropic.Anthropic(api_key=anthropic_key)
 
 
+def setup_gemini():
+    """Setup Google Gemini API client."""
+    google_key = os.getenv("GOOGLE_API_KEY")
+    if not google_key:
+        raise ValueError("Please set your GOOGLE_API_KEY environment variable")
+    genai.configure(api_key=google_key)
+    return genai.GenerativeModel("gemini-2.0-flash-lite")
+
+
 def parse_structured_response(response_text: str) -> tuple[str, str]:
     """
     Parse the structured JSON response from LLM models.
@@ -37,7 +54,20 @@ def parse_structured_response(response_text: str) -> tuple[str, str]:
         Tuple of (verdict, reasoning)
     """
     try:
-        data = json.loads(response_text)
+        cleaned_text = response_text.strip()
+
+        if cleaned_text.startswith("```json"):
+            cleaned_text = cleaned_text[7:]
+
+        elif cleaned_text.startswith("```"):
+            cleaned_text = cleaned_text[3:]
+
+        if cleaned_text.endswith("```"):
+            cleaned_text = cleaned_text[:-3]
+
+        cleaned_text = cleaned_text.strip()
+
+        data = json.loads(cleaned_text)
         verdict = data.get("verdict", "").upper()
         reasoning = data.get("reasoning", "")
 
@@ -90,6 +120,8 @@ def process_pair(
     else:
         if model == "claude":
             response = prompt_claude(system_message, user_message, temperature)
+        elif model == "gemini":
+            response = prompt_gemini(system_message, user_message, temperature)
         else:
             response = prompt_gpt(system_message, user_message, model, temperature)
 
@@ -168,6 +200,38 @@ def prompt_claude(
         return response.content[0].text.strip()
     except Exception as e:
         print(f"Error calling Anthropic API: {e}")
+        return "ERROR: API call failed"
+
+
+def prompt_gemini(
+    system_message: str,
+    user_message: str,
+    temperature: float = 0.3,
+) -> str:
+    """
+    Send prompt to Gemini 2.0 Flash Lite and return the response.
+
+    Args:
+        system_message: System prompt for the model
+        user_message: User message (selftext)
+        temperature: Temperature for response generation (0.0-1.0)
+
+    Returns:
+        Response from Gemini 2.0 Flash Lite
+    """
+    try:
+        model = setup_gemini()
+        prompt = f"{system_message}\n\n{user_message}"
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                temperature=temperature,
+                max_output_tokens=2000,
+            ),
+        )
+        return response.text.strip()
+    except Exception as e:
+        print(f"Error calling Google Gemini API: {e}")
         return "ERROR: API call failed"
 
 
@@ -322,6 +386,10 @@ def process_dataset(language_code: str) -> None:
         "claude_reason_1",
         "claude_label_2",
         "claude_reason_2",
+        "gemini_label_1",
+        "gemini_reason_1",
+        "gemini_label_2",
+        "gemini_reason_2",
     ]
 
     for column in columns_to_add:
@@ -421,6 +489,34 @@ def process_dataset(language_code: str) -> None:
             0.7,
         )
 
+        process_pair(
+            df,
+            idx,
+            row,
+            system_message,
+            user_message,
+            "gemini_label_1",
+            "gemini_reason_1",
+            progress_bar,
+            "gemini_pair1",
+            "gemini",
+            0.7,
+        )
+
+        process_pair(
+            df,
+            idx,
+            row,
+            system_message,
+            user_message,
+            "gemini_label_2",
+            "gemini_reason_2",
+            progress_bar,
+            "gemini_pair2",
+            "gemini",
+            0.7,
+        )
+
         df.to_csv(file_path, index=False)
 
     print(f"Completed processing {language_code.upper()} dataset")
@@ -432,6 +528,7 @@ def main() -> None:
 
     setup_openai()
     setup_anthropic()
+    setup_gemini()
 
     language_configs = ["br", "de", "es", "fr"]
 
