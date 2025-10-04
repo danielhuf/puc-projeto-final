@@ -2,30 +2,122 @@
 import os
 import warnings
 import logging
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union, Callable, Any
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 warnings.filterwarnings("ignore", category=UserWarning)
 logging.getLogger("google").setLevel(logging.ERROR)
 
 import pandas as pd
-from pathlib import Path
 import openai
 import anthropic
 import google.generativeai as genai
-import replicate
 import re
 import json
-import time
 from tqdm import tqdm
 from dotenv import load_dotenv
 
 load_dotenv()
 
-MAX_TOKENS = 2000
-DEFAULT_TEMPERATURE = 0.7
+
+class Config:
+    """Configuration constants for the LLM prompting system."""
+
+    MAX_TOKENS = 500
+    DEFAULT_TEMPERATURE = 0.7
+    SUPPORTED_LANGUAGES = ["br", "de", "es", "fr"]
+    VALID_VERDICTS = ["YTA", "NTA", "ESH", "NAH", "INFO"]
+
+    MODELS = {
+        "gpt-3.5-turbo": {"provider": "openai", "model": "gpt-3.5-turbo"},
+        "gpt-4o-mini": {"provider": "openai", "model": "gpt-4o-mini"},
+        "claude": {"provider": "anthropic", "model": "claude-3-haiku-20240307"},
+        "gemini": {"provider": "gemini", "model": "gemini-2.0-flash-lite"},
+        "llama-local": {"provider": "ollama", "model": "llama2:7b"},
+        "mistral-local": {"provider": "ollama", "model": "mistral:7b"},
+    }
+
+    COLUMN_PAIRS = [
+        ("gpt3.5_label_1", "gpt3.5_reason_1"),
+        ("gpt3.5_label_2", "gpt3.5_reason_2"),
+        ("gpt4_label_1", "gpt4_reason_1"),
+        ("gpt4_label_2", "gpt4_reason_2"),
+        ("claude_label_1", "claude_reason_1"),
+        ("claude_label_2", "claude_reason_2"),
+        ("gemini_label_1", "gemini_reason_1"),
+        ("gemini_label_2", "gemini_reason_2"),
+        ("llama_local_label_1", "llama_local_reason_1"),
+        ("llama_local_label_2", "llama_local_reason_2"),
+        ("mistral_local_label_1", "mistral_local_reason_1"),
+        ("mistral_local_label_2", "mistral_local_reason_2"),
+    ]
+
+    MODEL_COLUMN_MAPPING = {
+        "gpt-3.5-turbo": [
+            ("gpt3.5_label_1", "gpt3.5_reason_1"),
+            ("gpt3.5_label_2", "gpt3.5_reason_2"),
+        ],
+        "gpt-4o-mini": [
+            ("gpt4_label_1", "gpt4_reason_1"),
+            ("gpt4_label_2", "gpt4_reason_2"),
+        ],
+        "claude": [
+            ("claude_label_1", "claude_reason_1"),
+            ("claude_label_2", "claude_reason_2"),
+        ],
+        "gemini": [
+            ("gemini_label_1", "gemini_reason_1"),
+            ("gemini_label_2", "gemini_reason_2"),
+        ],
+        "llama-local": [
+            ("llama_local_label_1", "llama_local_reason_1"),
+            ("llama_local_label_2", "llama_local_reason_2"),
+        ],
+        "mistral-local": [
+            ("mistral_local_label_1", "mistral_local_reason_1"),
+            ("mistral_local_label_2", "mistral_local_reason_2"),
+        ],
+    }
 
 
-def setup_llm_provider(provider: str):
+@dataclass
+class ProcessingConfig:
+    """Configuration for processing a dataset."""
+
+    language_code: str
+    models_to_run: List[str]
+    max_rows: Optional[int] = None
+    output_file: Optional[str] = None
+
+    def __post_init__(self):
+        if self.language_code not in Config.SUPPORTED_LANGUAGES:
+            raise ValueError(f"Unsupported language: {self.language_code}")
+
+        if not self.output_file:
+            self.output_file = f"data/dataset_cleaned_{self.language_code}.csv"
+
+
+class LLMError(Exception):
+    """Base exception for LLM-related errors."""
+
+    pass
+
+
+class APIError(LLMError):
+    """Exception for API-related errors."""
+
+    pass
+
+
+class ConfigurationError(LLMError):
+    """Exception for configuration-related errors."""
+
+    pass
+
+
+def setup_llm_provider(provider: str) -> Union[Any, None]:
     """
     Setup LLM provider API client dynamically.
 
@@ -36,7 +128,7 @@ def setup_llm_provider(provider: str):
         Configured client or None for providers that don't return clients
 
     Raises:
-        ValueError: If required environment variable is not set
+        ConfigurationError: If required environment variable is not set
     """
     provider_configs = {
         "openai": {
@@ -58,16 +150,14 @@ def setup_llm_provider(provider: str):
                 genai.GenerativeModel("gemini-2.0-flash-lite"),
             )[-1],
         },
-        "replicate": {
-            "env_var": "REPLICATE_API_TOKEN",
-            "setup_func": lambda: setattr(
-                replicate, "api_token", os.getenv("REPLICATE_API_TOKEN")
-            ),
+        "ollama": {
+            "env_var": None,
+            "setup_func": lambda: None,
         },
     }
 
     if provider not in provider_configs:
-        raise ValueError(
+        raise ConfigurationError(
             f"Unknown provider: {provider}. Supported providers: {list(provider_configs.keys())}"
         )
 
@@ -75,28 +165,32 @@ def setup_llm_provider(provider: str):
     api_key = os.getenv(config["env_var"])
 
     if not api_key:
-        raise ValueError(f"Please set your {config['env_var']} environment variable")
+        raise ConfigurationError(
+            f"Please set your {config['env_var']} environment variable"
+        )
 
     return config["setup_func"]()
 
 
-def setup_all_providers():
+def setup_all_providers() -> Dict[str, Optional[Any]]:
     """Setup all LLM providers at once."""
-    providers = ["openai", "anthropic", "gemini", "replicate"]
+    providers = ["openai", "anthropic", "gemini", "ollama"]
     clients = {}
 
     for provider in providers:
         try:
             client = setup_llm_provider(provider)
             clients[provider] = client
-        except ValueError as e:
+        except ConfigurationError as e:
             print(f"{provider.title()} setup failed: {e}")
             clients[provider] = None
 
     return clients
 
 
-def parse_structured_response(response_text: str) -> tuple[str, str]:
+def parse_structured_response(
+    response_text: str,
+) -> Tuple[Optional[str], Optional[str]]:
     """
     Parse the structured JSON response from LLM models.
 
@@ -104,7 +198,7 @@ def parse_structured_response(response_text: str) -> tuple[str, str]:
         response_text: JSON response from LLM
 
     Returns:
-        Tuple of (verdict, reasoning)
+        Tuple of (verdict, reasoning) or (None, None) if parsing fails
     """
     try:
         if response_text.startswith("ERROR:"):
@@ -151,8 +245,7 @@ def parse_structured_response(response_text: str) -> tuple[str, str]:
         verdict = data.get("verdict", "").upper()
         reasoning = data.get("reasoning", "")
 
-        valid_verdicts = ["YTA", "NTA", "ESH", "NAH", "INFO"]
-        verdict = verdict if verdict in valid_verdicts else None
+        verdict = verdict if verdict in Config.VALID_VERDICTS else None
         reasoning = reasoning if reasoning and len(reasoning.strip()) >= 5 else None
 
         return verdict, reasoning
@@ -163,7 +256,7 @@ def parse_structured_response(response_text: str) -> tuple[str, str]:
         return extract_verdict_from_text(response_text)
 
 
-def extract_verdict_from_text(text: str) -> tuple[str, str]:
+def extract_verdict_from_text(text: str) -> Tuple[Optional[str], Optional[str]]:
     """
     Extract verdict and reasoning from plain text response when JSON parsing fails.
 
@@ -171,7 +264,7 @@ def extract_verdict_from_text(text: str) -> tuple[str, str]:
         text: Plain text response from LLM
 
     Returns:
-        Tuple of (verdict, reasoning)
+        Tuple of (verdict, reasoning) or (None, None) if extraction fails
     """
 
     verdict_patterns = [
@@ -202,27 +295,26 @@ def extract_verdict_from_text(text: str) -> tuple[str, str]:
         if len(reasoning) > 1000:
             reasoning = reasoning[:1000] + "..."
 
-    valid_verdicts = ["YTA", "NTA", "ESH", "NAH", "INFO"]
-    verdict = verdict if verdict in valid_verdicts else None
+    verdict = verdict if verdict in Config.VALID_VERDICTS else None
     reasoning = reasoning if reasoning and len(reasoning.strip()) >= 5 else None
 
     return verdict, reasoning
 
 
-def process_pair(
-    df,
-    idx,
-    row,
-    system_message,
-    user_message,
-    label_col,
-    reason_col,
-    progress_bar,
-    pair_name,
-    model="gpt-3.5-turbo",
-):
+def process_model_prediction(
+    df: pd.DataFrame,
+    idx: int,
+    row: pd.Series,
+    system_message: str,
+    user_message: str,
+    label_col: str,
+    reason_col: str,
+    progress_bar: tqdm,
+    pair_name: str,
+    model: str,
+) -> None:
     """
-    Process a single pair of columns (label and reason) for a row.
+    Process a single model prediction for a row.
 
     Args:
         df: DataFrame to update
@@ -242,19 +334,26 @@ def process_pair(
     if pd.notna(row[label_col]) or pd.notna(row[reason_col]):
         progress_bar.set_postfix(**{pair_name: "skipped"})
     else:
-        prompt_function = MODEL_FUNCTIONS.get(model, prompt_gpt_wrapper)
-        response = prompt_function(system_message, user_message)
+        try:
+            prompt_function = MODEL_FUNCTIONS[model]
+            response = prompt_function(system_message, user_message)
 
-        verdict, reasoning = parse_structured_response(response)
-        df.at[idx, label_col] = verdict
-        df.at[idx, reason_col] = reasoning
+            verdict, reasoning = parse_structured_response(response)
+            df.at[idx, label_col] = verdict
+            df.at[idx, reason_col] = reasoning
 
-        if verdict is not None and reasoning is not None:
-            progress_bar.set_postfix(**{pair_name: "complete"})
-        elif verdict is not None or reasoning is not None:
-            progress_bar.set_postfix(**{pair_name: "partial"})
-        else:
-            progress_bar.set_postfix(**{pair_name: "failed"})
+            if verdict is not None and reasoning is not None:
+                progress_bar.set_postfix(**{pair_name: "complete"})
+            elif verdict is not None or reasoning is not None:
+                progress_bar.set_postfix(**{pair_name: "partial"})
+            else:
+                progress_bar.set_postfix(**{pair_name: "failed"})
+        except APIError as e:
+            print(f"API error for {model}: {e}")
+            progress_bar.set_postfix(**{pair_name: "api_error"})
+        except Exception as e:
+            print(f"Unexpected error for {model}: {e}")
+            progress_bar.set_postfix(**{pair_name: "error"})
 
 
 def prompt_gpt(
@@ -272,6 +371,9 @@ def prompt_gpt(
 
     Returns:
         Response from the specified GPT model
+
+    Raises:
+        APIError: If API call fails
     """
     try:
         setup_llm_provider("openai")
@@ -282,13 +384,12 @@ def prompt_gpt(
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": user_message},
             ],
-            max_tokens=MAX_TOKENS,
-            temperature=DEFAULT_TEMPERATURE,
+            max_tokens=Config.MAX_TOKENS,
+            temperature=Config.DEFAULT_TEMPERATURE,
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
-        print(f"Error calling OpenAI API: {e}")
-        return "ERROR: API call failed"
+        raise APIError(f"Error calling OpenAI API: {e}")
 
 
 def prompt_claude(
@@ -304,20 +405,22 @@ def prompt_claude(
 
     Returns:
         Response from Claude Haiku 3
+
+    Raises:
+        APIError: If API call fails
     """
     try:
         client = setup_llm_provider("anthropic")
         response = client.messages.create(
-            model="claude-3-haiku-20240307",
-            max_tokens=MAX_TOKENS,
-            temperature=DEFAULT_TEMPERATURE,
+            model=Config.MODELS["claude"]["model"],
+            max_tokens=Config.MAX_TOKENS,
+            temperature=Config.DEFAULT_TEMPERATURE,
             system=system_message,
             messages=[{"role": "user", "content": user_message}],
         )
         return response.content[0].text.strip()
     except Exception as e:
-        print(f"Error calling Anthropic API: {e}")
-        return "ERROR: API call failed"
+        raise APIError(f"Error calling Anthropic API: {e}")
 
 
 def prompt_gemini(
@@ -333,6 +436,9 @@ def prompt_gemini(
 
     Returns:
         Response from Gemini 2.0 Flash Lite
+
+    Raises:
+        APIError: If API call fails
     """
     try:
         model = setup_llm_provider("gemini")
@@ -340,69 +446,16 @@ def prompt_gemini(
         response = model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
-                temperature=DEFAULT_TEMPERATURE,
-                max_output_tokens=MAX_TOKENS,
+                temperature=Config.DEFAULT_TEMPERATURE,
+                max_output_tokens=Config.MAX_TOKENS,
             ),
         )
         return response.text.strip()
     except Exception as e:
-        print(f"Error calling Google Gemini API: {e}")
-        return "ERROR: API call failed"
+        raise APIError(f"Error calling Google Gemini API: {e}")
 
 
-def prompt_llama(
-    system_message: str,
-    user_message: str,
-    max_retries: int = 3,
-) -> str:
-    """
-    Send prompt to Llama 2 7B Chat via Replicate and return the response.
-
-    Args:
-        system_message: System prompt for the model
-        user_message: User message (selftext)
-        max_retries: Maximum number of retry attempts
-
-    Returns:
-        Response from Llama 2 7B Chat
-    """
-    setup_llm_provider("replicate")
-
-    for attempt in range(max_retries):
-        try:
-            response_text = ""
-            for event in replicate.stream(
-                "meta/llama-2-7b-chat",
-                input={
-                    "top_p": 1,
-                    "prompt": user_message,
-                    "temperature": DEFAULT_TEMPERATURE,
-                    "system_prompt": system_message,
-                    "length_penalty": 1,
-                    "max_new_tokens": MAX_TOKENS,
-                    "prompt_template": "<s>[INST] <<SYS>>\n{system_prompt}\n<</SYS>>\n\n{prompt} [/INST]",
-                    "presence_penalty": 0,
-                    "log_performance_metrics": False,
-                },
-            ):
-                response_text += str(event)
-
-            return response_text.strip()
-
-        except Exception as e:
-            print(
-                f"Error calling Replicate Llama API (attempt {attempt + 1}/{max_retries}): {e}"
-            )
-            if attempt < max_retries - 1:
-                wait_time = (attempt + 1) * 3
-                print(f"Retrying in {wait_time} seconds...")
-                time.sleep(wait_time)
-            else:
-                print("All retry attempts failed")
-                return "ERROR: API call failed"
-
-
-def prompt_gpt_wrapper(model_name: str):
+def create_gpt_prompt_function(model_name: str) -> Callable[[str, str], str]:
     """Create a wrapper for GPT models to match other model signatures."""
 
     def wrapper(system_message: str, user_message: str) -> str:
@@ -411,12 +464,65 @@ def prompt_gpt_wrapper(model_name: str):
     return wrapper
 
 
-MODEL_FUNCTIONS = {
-    "gpt-3.5-turbo": prompt_gpt_wrapper("gpt-3.5-turbo"),
-    "gpt-4o-mini": prompt_gpt_wrapper("gpt-4o-mini"),
+def prompt_ollama(
+    system_message: str, user_message: str, model: str = "llama2:7b"
+) -> str:
+    """
+    Send prompt to Ollama local model and return the response.
+
+    Args:
+        system_message: System prompt for the model
+        user_message: User message (selftext)
+        model: Model to use (e.g., "llama2:7b", "mistral:7b")
+
+    Returns:
+        Response from the specified Ollama model
+
+    Raises:
+        APIError: If API call fails
+    """
+    try:
+        import requests
+
+        # Check if Ollama is running
+        try:
+            health_check = requests.get("http://localhost:11434/api/tags", timeout=5)
+            if health_check.status_code != 200:
+                raise APIError("Ollama service is not responding properly")
+        except requests.exceptions.ConnectionError:
+            raise APIError("Ollama is not running. Please start Ollama first with: ollama serve")
+
+        url = "http://localhost:11434/api/generate"
+        payload = {
+            "model": model,
+            "prompt": f"{system_message}\n\n{user_message}",
+            "stream": False,
+            "options": {
+                "num_predict": Config.MAX_TOKENS,
+                "temperature": Config.DEFAULT_TEMPERATURE,
+            },
+        }
+
+        print(f"🔄 Sending request to Ollama model: {model}")
+        response = requests.post(url, json=payload, timeout=300)  # Increased to 5 minutes
+        response.raise_for_status()
+
+        result = response.json()["response"].strip()
+        print(f"✅ Received response from {model} ({len(result)} characters)")
+        return result
+    except requests.exceptions.Timeout:
+        raise APIError(f"Ollama timeout: Model {model} took longer than 5 minutes to respond")
+    except Exception as e:
+        raise APIError(f"Error calling Ollama API: {e}")
+
+
+MODEL_FUNCTIONS: Dict[str, Callable[[str, str], str]] = {
+    "gpt-3.5-turbo": create_gpt_prompt_function("gpt-3.5-turbo"),
+    "gpt-4o-mini": create_gpt_prompt_function("gpt-4o-mini"),
     "claude": prompt_claude,
     "gemini": prompt_gemini,
-    "llama": prompt_llama,
+    "llama-local": lambda sys, user: prompt_ollama(sys, user, "llama2:7b"),
+    "mistral-local": lambda sys, user: prompt_ollama(sys, user, "mistral:7b"),
 }
 
 
@@ -434,6 +540,18 @@ def add_column_if_not_exists(df: pd.DataFrame, column_name: str) -> None:
         df[column_name] = df[column_name].astype("object")
 
 
+def add_all_required_columns(df: pd.DataFrame) -> None:
+    """
+    Add all required columns for model predictions to the DataFrame.
+
+    Args:
+        df: DataFrame to modify
+    """
+    for label_col, reason_col in Config.COLUMN_PAIRS:
+        add_column_if_not_exists(df, label_col)
+        add_column_if_not_exists(df, reason_col)
+
+
 def get_system_message(language_code: str) -> str:
     """
     Get the system message in the appropriate language.
@@ -443,301 +561,160 @@ def get_system_message(language_code: str) -> str:
 
     Returns:
         System message in the specified language
+
+    Raises:
+        ConfigurationError: If language code is not supported or config file is missing
     """
-    system_messages = {
-        "br": """Você é uma ferramenta para avaliar dilemas morais.
-Você DEVE avaliar o seguinte post do subreddit "EuSouOBabaca" e fornecer TANTO um veredicto QUANTO um raciocínio.
+    config_path = Path(__file__).parent.parent / "config" / "system_messages.json"
 
-Primeiro, determine se o OP (postador original) deste post é o babaca no cenário que eles descrevem.
-Você DEVE fornecer um rótulo categórico indicando sua avaliação do cenário, de uma dessas escolhas:
-• YTA, que significa "You're the Asshole" (Você é o Babaca), é para cenários onde o OP está em falta em sua situação.
-• NTA, que significa "Not the Asshole" (Não é o Babaca), é para cenários onde o OP NÃO é culpado e a outra
-parte descrita em seu cenário é culpada.
-• ESH, que significa "Everyone Sucks Here" (Todo Mundo É Babaca Aqui), é para cenários onde ambas as partes são culpadas: ambas
-as pessoas envolvidas no cenário devem ser responsabilizadas.
-• NAH, que significa "No Assholes Here" (Nenhum Babaca Aqui), é para cenários onde nenhuma das partes é culpada. Todas as ações
-das partes são justificadas. Ninguém precisa ser responsabilizado. Acontece.
-• INFO, que significa "Not Enough Info" (Informação Insuficiente), é para situações onde o OP nunca esclarece detalhes que
-determinariam o verdadeiro julgamento.
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            system_messages = json.load(f)
+    except FileNotFoundError:
+        raise ConfigurationError(
+            f"System messages config file not found: {config_path}"
+        )
+    except json.JSONDecodeError as e:
+        raise ConfigurationError(f"Invalid JSON in system messages config: {e}")
 
-Você DEVE também fornecer uma explicação do porquê escolheu este rótulo. Restrinja sua explicação a UM parágrafo.
+    if language_code not in system_messages:
+        raise ConfigurationError(f"Unsupported language code: {language_code}")
 
-Você DEVE responder com um objeto JSON válido no seguinte formato:
-{
-    "verdict": "[YTA|NTA|ESH|NAH|INFO]",
-    "reasoning": "[Sua explicação aqui]"
-}
-
-Não forneça texto adicional, comentários ou formatação. Apenas retorne o objeto JSON.""",
-        "de": """Sie sind ein Werkzeug zur Bewertung moralischer Dilemmata.
-Sie MÜSSEN den folgenden Post aus dem Subreddit "BinIchDasArschloch" bewerten und SOWOHL ein Urteil ALS AUCH eine Begründung liefern.
-
-Bestimmen Sie zuerst, ob der OP (Original Poster) dieses Posts das Arschloch in dem von ihnen beschriebenen Szenario ist.
-Sie MÜSSEN ein kategoriales Label angeben, das Ihre Bewertung des Szenarios anzeigt, aus einer dieser Wahlmöglichkeiten:
-• YTA, was für "You're the Asshole" steht, ist für Szenarien, in denen der OP in seiner Situation schuld ist.
-• NTA, was für "Not the Asshole" steht, ist für Szenarien, in denen der OP NICHT schuld ist und die andere
-Partei in ihrem Szenario schuld ist.
-• ESH, was für "Everyone Sucks Here" steht, ist für Szenarien, in denen beide Parteien schuld sind: beide
-Menschen im Szenario sollten zur Verantwortung gezogen werden.
-• NAH, was für "No Assholes Here" steht, ist für Szenarien, in denen keine Partei schuld ist. Alle Handlungen
-der Parteien sind gerechtfertigt. Niemand muss zur Verantwortung gezogen werden. Scheiße passiert.
-• INFO, was für "Not Enough Info" steht, ist für Situationen, in denen der OP nie Details klärt, die
-das wahre Urteil bestimmen würden.
-
-Sie MÜSSEN auch eine Erklärung liefern, warum Sie dieses Label gewählt haben. Beschränken Sie Ihre Erklärung auf EINEN Absatz.
-
-Sie MÜSSEN mit einem gültigen JSON-Objekt in folgendem Format antworten:
-{
-    "verdict": "[YTA|NTA|ESH|NAH|INFO]",
-    "reasoning": "[Ihre Erklärung hier]"
-}
-
-Liefern Sie keinen zusätzlichen Text, Kommentare oder Formatierung. Geben Sie nur das JSON-Objekt zurück.""",
-        "es": """Eres una herramienta para evaluar dilemas morales.
-DEBES evaluar la siguiente publicación del subreddit "soyculero" y proporcionar TANTO un veredicto COMO un razonamiento.
-
-Primero, determina si el OP (poster original) de esta publicación es el idiota en el escenario que describen.
-DEBES proporcionar una etiqueta categórica que indique tu evaluación del escenario, de una de estas opciones:
-• YTA, que significa "You're the Asshole" (Eres el Idiota), es para escenarios donde el OP tiene la culpa en su situación.
-• NTA, que significa "Not the Asshole" (No es el Idiota), es para escenarios donde el OP NO tiene la culpa y la otra
-parte descrita en su escenario tiene la culpa.
-• ESH, que significa "Everyone Sucks Here" (Todos Apestan Aquí), es para escenarios donde ambas partes tienen la culpa: ambas
-personas involucradas en el escenario deben ser responsables.
-• NAH, que significa "No Assholes Here" (No hay Idiotas Aquí), es para escenarios donde ninguna de las partes tiene la culpa. Todas las acciones
-de las partes están justificadas. Nadie necesita ser responsable. Las cosas pasan.
-• INFO, que significa "Not Enough Info" (Información Insuficiente), es para situaciones donde el OP nunca aclara detalles que
-determinarían el verdadero juicio.
-
-DEBES también proporcionar una explicación de por qué elegiste esta etiqueta. Restringe tu explicación a UN párrafo.
-
-DEBES responder con un objeto JSON válido en el siguiente formato:
-{
-    "verdict": "[YTA|NTA|ESH|NAH|INFO]",
-    "reasoning": "[Tu explicación aquí]"
-}
-
-No proporciones texto adicional, comentarios o formato. Solo devuelve el objeto JSON.""",
-        "fr": """Vous êtes un outil pour évaluer les dilemmes moraux.
-Vous DEVEZ évaluer le post suivant du subreddit "suisjeletroudeballe" et fournir À LA FOIS un verdict ET un raisonnement.
-
-D'abord, déterminez si l'OP (posteur original) de ce post est le connard dans le scénario qu'ils décrivent.
-Vous DEVEZ fournir une étiquette catégorielle indiquant votre évaluation du scénario, parmi ces choix :
-• YTA, qui signifie "You're the Asshole" (Tu es le Connard), est pour les scénarios où l'OP est en tort dans sa situation.
-• NTA, qui signifie "Not the Asshole" (Pas le Connard), est pour les scénarios où l'OP N'est PAS à blâmer et l'autre
-partie décrite dans leur scénario est à blâmer.
-• ESH, qui signifie "Everyone Sucks Here" (Tout le Monde Sucks Ici), est pour les scénarios où les deux parties sont à blâmer : les deux
-personnes impliquées dans le scénario devraient être tenues responsables.
-• NAH, qui signifie "No Assholes Here" (Pas de Connards Ici), est pour les scénarios où aucune partie n'est à blâmer. Toutes les actions
-des parties sont justifiées. Personne n'a besoin d'être tenu responsable. La merde arrive.
-• INFO, qui signifie "Not Enough Info" (Pas Assez d'Info), est pour les situations où l'OP ne clarifie jamais les détails qui
-détermineraient le vrai jugement.
-
-Vous DEVEZ aussi fournir une explication de pourquoi vous avez choisi cette étiquette. Restreignez votre explication à UN paragraphe.
-
-Vous DEVEZ répondre avec un objet JSON valide dans le format suivant :
-{
-    "verdict": "[YTA|NTA|ESH|NAH|INFO]",
-    "reasoning": "[Votre explication ici]"
-}
-
-Ne fournissez pas de texte supplémentaire, commentaires ou formatage. Retournez seulement l'objet JSON.""",
-    }
-
-    return system_messages.get(language_code, system_messages["br"])
+    return system_messages[language_code]
 
 
-def process_dataset(language_code: str) -> None:
+def load_dataset(language_code: str) -> pd.DataFrame:
     """
-    Process a single dataset: add columns, prompt GPT-3.5, and save results.
+    Load dataset for the specified language.
 
     Args:
         language_code: Language code (br, de, es, fr)
+
+    Returns:
+        Loaded DataFrame
+
+    Raises:
+        FileNotFoundError: If dataset file is not found
     """
     file_path = f"data/dataset_cleaned_{language_code}.csv"
-    df = pd.read_csv(file_path)
+    try:
+        return pd.read_csv(file_path)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Dataset file not found: {file_path}")
 
-    print(f"Processing {language_code.upper()} dataset...")
 
-    columns_to_add = [
-        "gpt3.5_label_1",
-        "gpt3.5_reason_1",
-        "gpt3.5_label_2",
-        "gpt3.5_reason_2",
-        "gpt4_label_1",
-        "gpt4_reason_1",
-        "gpt4_label_2",
-        "gpt4_reason_2",
-        "claude_label_1",
-        "claude_reason_1",
-        "claude_label_2",
-        "claude_reason_2",
-        "gemini_label_1",
-        "gemini_reason_1",
-        "gemini_label_2",
-        "gemini_reason_2",
-        "llama_label_1",
-        "llama_reason_1",
-        "llama_label_2",
-        "llama_reason_2",
-    ]
+def process_models_for_row(
+    df: pd.DataFrame,
+    idx: int,
+    row: pd.Series,
+    system_message: str,
+    user_message: str,
+    progress_bar: tqdm,
+    models_to_run: List[str],
+) -> None:
+    """
+    Process specified models for a single row.
 
-    for column in columns_to_add:
-        add_column_if_not_exists(df, column)
+    Args:
+        df: DataFrame to update
+        idx: Row index
+        row: Current row data
+        system_message: System prompt for LLM
+        user_message: User message
+        progress_bar: tqdm progress bar
+        models_to_run: List of models to process
+    """
+    for model in models_to_run:
+        if model not in Config.MODEL_COLUMN_MAPPING:
+            print(f"Warning: Unknown model {model}, skipping")
+            continue
 
-    system_message = get_system_message(language_code)
+        column_pairs = Config.MODEL_COLUMN_MAPPING[model]
 
-    progress_bar = tqdm(
-        df.head(2).iterrows(),
-        total=2,
-        desc=f"Processing {language_code.upper()}",
-    )
-    for idx, row in progress_bar:
-        user_message = str(row["selftext"])
+        for i, (label_col, reason_col) in enumerate(column_pairs, 1):
+            pair_name = f"{model}_pair{i}"
+            try:
+                process_model_prediction(
+                    df,
+                    idx,
+                    row,
+                    system_message,
+                    user_message,
+                    label_col,
+                    reason_col,
+                    progress_bar,
+                    pair_name,
+                    model,
+                )
+            except APIError as e:
+                print(f"API error for {model}: {e}")
+                progress_bar.set_postfix(**{pair_name: "api_error"})
+            except Exception as e:
+                print(f"Unexpected error for {model}: {e}")
+                progress_bar.set_postfix(**{pair_name: "error"})
 
-        process_pair(
-            df,
-            idx,
-            row,
-            system_message,
-            user_message,
-            "gpt3.5_label_1",
-            "gpt3.5_reason_1",
-            progress_bar,
-            "gpt3.5_pair1",
-            "gpt-3.5-turbo",
+
+def process_dataset(config: ProcessingConfig) -> None:
+    """
+    Process a single dataset with the specified configuration.
+
+    Args:
+        config: Processing configuration
+    """
+    try:
+        df = load_dataset(config.language_code)
+        print(f"Processing {config.language_code.upper()} dataset...")
+
+        add_all_required_columns(df)
+
+        system_message = get_system_message(config.language_code)
+
+        rows_to_process = df.head(config.max_rows) if config.max_rows else df
+
+        progress_bar = tqdm(
+            rows_to_process.iterrows(),
+            total=len(rows_to_process),
+            desc=f"Processing {config.language_code.upper()}",
         )
 
-        process_pair(
-            df,
-            idx,
-            row,
-            system_message,
-            user_message,
-            "gpt3.5_label_2",
-            "gpt3.5_reason_2",
-            progress_bar,
-            "gpt3.5_pair2",
-            "gpt-3.5-turbo",
-        )
+        for idx, row in progress_bar:
+            user_message = str(row["selftext"])
 
-        process_pair(
-            df,
-            idx,
-            row,
-            system_message,
-            user_message,
-            "gpt4_label_1",
-            "gpt4_reason_1",
-            progress_bar,
-            "gpt4_pair1",
-            "gpt-4o-mini",
-        )
+            process_models_for_row(
+                df,
+                idx,
+                row,
+                system_message,
+                user_message,
+                progress_bar,
+                config.models_to_run,
+            )
 
-        process_pair(
-            df,
-            idx,
-            row,
-            system_message,
-            user_message,
-            "gpt4_label_2",
-            "gpt4_reason_2",
-            progress_bar,
-            "gpt4_pair2",
-            "gpt-4o-mini",
-        )
+            df.to_csv(config.output_file, index=False)
 
-        process_pair(
-            df,
-            idx,
-            row,
-            system_message,
-            user_message,
-            "claude_label_1",
-            "claude_reason_1",
-            progress_bar,
-            "claude_pair1",
-            "claude",
-        )
+        print(f"Completed processing {config.language_code.upper()} dataset")
 
-        process_pair(
-            df,
-            idx,
-            row,
-            system_message,
-            user_message,
-            "claude_label_2",
-            "claude_reason_2",
-            progress_bar,
-            "claude_pair2",
-            "claude",
-        )
-
-        process_pair(
-            df,
-            idx,
-            row,
-            system_message,
-            user_message,
-            "gemini_label_1",
-            "gemini_reason_1",
-            progress_bar,
-            "gemini_pair1",
-            "gemini",
-        )
-
-        process_pair(
-            df,
-            idx,
-            row,
-            system_message,
-            user_message,
-            "gemini_label_2",
-            "gemini_reason_2",
-            progress_bar,
-            "gemini_pair2",
-            "gemini",
-        )
-
-        process_pair(
-            df,
-            idx,
-            row,
-            system_message,
-            user_message,
-            "llama_label_1",
-            "llama_reason_1",
-            progress_bar,
-            "llama_pair1",
-            "llama",
-        )
-
-        process_pair(
-            df,
-            idx,
-            row,
-            system_message,
-            user_message,
-            "llama_label_2",
-            "llama_reason_2",
-            progress_bar,
-            "llama_pair2",
-            "llama",
-        )
-
-        df.to_csv(file_path, index=False)
-
-    print(f"Completed processing {language_code.upper()} dataset")
+    except Exception as e:
+        print(f"Error processing {config.language_code.upper()} dataset: {e}")
+        raise
 
 
 def main() -> None:
+    """Main function to process all datasets."""
     script_dir = Path(__file__).parent
     os.chdir(script_dir.parent)
 
-    language_configs = ["br", "de", "es", "fr"]
+    models_to_run = ["llama-local"]
+    max_rows = 2
 
-    for language_code in language_configs:
+    for language_code in Config.SUPPORTED_LANGUAGES:
         try:
-            process_dataset(language_code)
+            config = ProcessingConfig(
+                language_code=language_code,
+                models_to_run=models_to_run,
+                max_rows=max_rows,
+            )
+            process_dataset(config)
         except Exception as e:
             print(f"Error processing {language_code.upper()} dataset: {e}")
             continue
