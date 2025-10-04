@@ -38,6 +38,10 @@ class Config:
         "gemini": {"provider": "gemini", "model": "gemini-2.0-flash-lite"},
         "llama": {"provider": "replicate", "model": "meta/llama-2-7b-chat"},
         "mistral": {"provider": "replicate", "model": "mistralai/mistral-7b-v0.1"},
+        "gemma": {
+            "provider": "replicate",
+            "model": "google-deepmind/gemma-7b-it:2790a695e5dcae15506138cc4718d1106d0d475e6dca4b1d43f42414647993d5",
+        },
     }
 
     COLUMN_PAIRS = [
@@ -53,6 +57,8 @@ class Config:
         ("llama_label_2", "llama_reason_2"),
         ("mistral_label_1", "mistral_reason_1"),
         ("mistral_label_2", "mistral_reason_2"),
+        ("gemma_label_1", "gemma_reason_1"),
+        ("gemma_label_2", "gemma_reason_2"),
     ]
 
     MODEL_COLUMN_MAPPING = {
@@ -79,6 +85,10 @@ class Config:
         "mistral": [
             ("mistral_label_1", "mistral_reason_1"),
             ("mistral_label_2", "mistral_reason_2"),
+        ],
+        "gemma": [
+            ("gemma_label_1", "gemma_reason_1"),
+            ("gemma_label_2", "gemma_reason_2"),
         ],
     }
 
@@ -513,7 +523,14 @@ MODEL_FUNCTIONS: Dict[str, Callable[[str, str], str]] = {
     "claude": prompt_claude,
     "gemini": prompt_gemini,
     "llama": lambda sys, user: prompt_replicate(sys, user, "meta/llama-2-7b-chat"),
-    "mistral": lambda sys, user: prompt_replicate(sys, user, "mistralai/mistral-7b-v0.1"),
+    "mistral": lambda sys, user: prompt_replicate(
+        sys, user, "mistralai/mistral-7b-v0.1"
+    ),
+    "gemma": lambda sys, user: prompt_replicate(
+        sys,
+        user,
+        "google-deepmind/gemma-7b-it:2790a695e5dcae15506138cc4718d1106d0d475e6dca4b1d43f42414647993d5",
+    ),
 }
 
 
@@ -695,7 +712,7 @@ def main() -> None:
     script_dir = Path(__file__).parent
     os.chdir(script_dir.parent)
 
-    models_to_run = ["mistral"]
+    models_to_run = ["gemma"]
     max_rows = 2
 
     for language_code in Config.SUPPORTED_LANGUAGES:
