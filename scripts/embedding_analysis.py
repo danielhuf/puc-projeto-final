@@ -15,12 +15,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics.pairwise import cosine_similarity
-from typing import List, Tuple, Dict
+from typing import List, Dict
 from tqdm import tqdm
 from sklearn.preprocessing import normalize
 import pickle
 import json
 from pathlib import Path
+from embedding_utils import (
+    load_embeddings,
+    analyze_row_similarities,
+    identify_actors_and_reasons,
+    plot_row_similarity_distribution,
+    summarize_row_characteristics,
+    display_edge_llm_human_similarities,
+)
 
 plt.rcParams["figure.max_open_warning"] = 0
 plt.rcParams["figure.dpi"] = 100
@@ -31,54 +39,10 @@ sns.set_palette("husl")
 
 
 # %% Load and explore the embeddings data
-def load_embeddings(embeddings_file: str) -> Tuple[pd.DataFrame, Dict[str, np.ndarray]]:
-    """Load embeddings from CSV and organize them by column."""
-    df = pd.read_csv(embeddings_file)
-
-    embedding_cols = [col for col in df.columns if col.endswith("_embedding")]
-
-    embeddings_dict = {}
-    for col in tqdm(embedding_cols, desc="Processing embedding columns"):
-
-        def parse_embedding(x):
-            """Convert string representation to numpy array."""
-            if pd.isna(x):
-                return np.zeros(768, dtype=np.float32)
-            return np.fromstring(x.strip("[]"), sep=" ", dtype=np.float32)
-
-        embeddings = df[col].apply(parse_embedding).values
-
-        embeddings_array = np.vstack(embeddings)
-        embeddings_dict[col] = embeddings_array
-
-    return df, embeddings_dict
-
-
 df, embeddings_dict = load_embeddings("../data/embeddings.csv")
 
 # %% Identify actors and reason types
-actors = set()
-reason_types = set()
-
-for col in embeddings_dict.keys():
-    if col in ["selftext_embedding"]:
-        continue
-
-    if col == "top_comment_embedding":
-        actors.add("human")
-        reason_types.add("top_comment")
-        continue
-
-    parts = col.replace("_embedding", "").split("_")
-
-    actor = parts[0]
-    reason = "_".join(parts[1:])
-
-    actors.add(actor)
-    reason_types.add(reason)
-
-actors = sorted(list(actors))
-reason_types = sorted(list(reason_types))
+actors, reason_types = identify_actors_and_reasons(embeddings_dict)
 
 # %% [markdown]
 # ## 1. Scenario-wise Analysis
@@ -88,102 +52,8 @@ reason_types = sorted(list(reason_types))
 
 
 # %% Scenario-wise similarity analysis
-def analyze_row_similarities(
-    embeddings_dict: Dict[str, np.ndarray],
-    actors: List[str],
-    reason_types: List[str],
-) -> Dict:
-    """Analyze inter-actor similarity on the same ethical scenarios.
-
-    This function compares how different LLM models and human redditors respond to a same ethical dilemma.
-    For each scenario (row) in the dataset, it calculates similarities between all possible
-    actor pairs by comparing their reasoning embeddings.
-
-    The analysis accounts for actors having different numbers of reasoning approaches
-    by comparing all available combinations and taking the mean similarity.
-
-    Args:
-        embeddings_dict: Dictionary mapping column names to embedding arrays
-        actors: List of actors to analyze (LLM models and human redditors)
-        reason_types: List of available reasoning types (e.g., ['reason_1', 'reason_2'])
-
-    Returns:
-        Dictionary with structure:
-        {
-            scenario_id: {
-                'actor1_vs_actor2': mean_similarity_score,
-                'actor1_vs_actor3': mean_similarity_score,
-                ...
-            }
-        }
-
-    Example:
-        For 100th scenario comparing GPT-4 (has reason_1, reason_2) vs Claude (has reason_1):
-        - Calculates: gpt4_reason_1[100] vs claude_reason_1[100]
-        - Calculates: gpt4_reason_2[100] vs claude_reason_1[100]
-        - Returns: mean of both similarities as final 'gpt4_vs_claude' score
-    """
-
-    actor_reason_combinations = {}
-    for actor in actors:
-        available_reasons = []
-        if actor == "human":
-            if "top_comment_embedding" in embeddings_dict:
-                available_reasons.append("top_comment")
-        else:
-            for reason_type in reason_types:
-                col_name = f"{actor}_{reason_type}_embedding"
-                if col_name in embeddings_dict:
-                    available_reasons.append(reason_type)
-        if available_reasons:
-            actor_reason_combinations[actor] = available_reasons
-
-    first_embedding = next(iter(embeddings_dict.values()))
-    n_rows = first_embedding.shape[0]
-    row_similarities = {}
-
-    for i in tqdm(range(n_rows), desc="Processing rows"):
-        row_sims = {}
-        actor_names = list(actor_reason_combinations.keys())
-
-        for j, actor1 in enumerate(actor_names):
-            for actor2 in actor_names[j + 1 :]:
-                actor1_reasons = actor_reason_combinations[actor1]
-                actor2_reasons = actor_reason_combinations[actor2]
-
-                pair_similarities = []
-                for reason1 in actor1_reasons:
-                    for reason2 in actor2_reasons:
-                        if actor1 == "human":
-                            col_name1 = "top_comment_embedding"
-                        else:
-                            col_name1 = f"{actor1}_{reason1}_embedding"
-
-                        if actor2 == "human":
-                            col_name2 = "top_comment_embedding"
-                        else:
-                            col_name2 = f"{actor2}_{reason2}_embedding"
-
-                        embedding1 = embeddings_dict[col_name1][i].reshape(1, -1)
-                        embedding2 = embeddings_dict[col_name2][i].reshape(1, -1)
-
-                        embedding1_norm = normalize(embedding1, norm="l2")
-                        embedding2_norm = normalize(embedding2, norm="l2")
-
-                        similarity = cosine_similarity(
-                            embedding1_norm, embedding2_norm
-                        )[0, 0]
-                        pair_similarities.append(similarity)
-
-                mean_similarity = np.mean(pair_similarities)
-                row_sims[f"{actor1}_vs_{actor2}"] = float(mean_similarity)
-
-        row_similarities[i] = row_sims
-
-    return row_similarities
-
-
-cache_path = Path("../results/row_similarities.pkl")
+cache_path = Path("../results/base/row_similarities.pkl")
+cache_path.parent.mkdir(parents=True, exist_ok=True)
 if cache_path.exists():
     with open(cache_path, "rb") as f:
         row_similarities = pickle.load(f)
@@ -196,126 +66,14 @@ else:
 
 
 # %% Visualize scenario-wise similarities
-def plot_row_similarity_distribution(row_similarities: Dict):
-    """Plot distribution of similarities across scenarios.
-
-    Displays mean similarities across all available reason type combinations
-    for each actor pair.
-    """
-
-    pair_similarities = {}
-    for row_data in row_similarities.values():
-        for pair, sim in row_data.items():
-            if pair not in pair_similarities:
-                pair_similarities[pair] = []
-            pair_similarities[pair].append(sim)
-
-    n_pairs = len(pair_similarities)
-    n_cols = min(4, n_pairs)
-    n_rows = (n_pairs + n_cols - 1) // n_cols
-
-    _, axes = plt.subplots(n_rows, n_cols, figsize=(4 * n_cols, 3 * n_rows))
-
-    if n_pairs == 1:
-        axes = [axes]
-    elif n_rows == 1:
-        axes = axes.flatten() if hasattr(axes, "flatten") else [axes]
-    else:
-        axes = axes.flatten()
-
-    for i, (pair, similarities) in enumerate(
-        tqdm(pair_similarities.items(), desc="Plotting row similarities")
-    ):
-        if i < len(axes):
-            axes[i].hist(
-                similarities,
-                bins=20,
-                alpha=0.7,
-                edgecolor="black",
-                color="skyblue",
-                density=True,
-            )
-
-            mean_sim = np.mean(similarities)
-            median_sim = np.median(similarities)
-
-            axes[i].axvline(
-                mean_sim,
-                color="red",
-                linestyle="--",
-                alpha=0.8,
-                label=f"Mean: {mean_sim:.3f}",
-            )
-            axes[i].axvline(
-                median_sim,
-                color="blue",
-                linestyle="-",
-                alpha=0.8,
-                label=f"Median: {median_sim:.3f}",
-            )
-
-            axes[i].set_title(
-                f'{pair.replace("_vs_", " vs ")}\nMean: {mean_sim:.3f}, Median: {median_sim:.3f}'
-            )
-            axes[i].set_xlabel("Cosine Similarity")
-            axes[i].set_ylabel("Frequency")
-            axes[i].grid(True, alpha=0.3)
-            axes[i].legend()
-
-    for i in range(len(pair_similarities), len(axes)):
-        axes[i].set_visible(False)
-
-    plt.tight_layout()
-    plt.suptitle(
-        f"Distribution of scenario-wise similarities between actors\n({n_pairs} pairs)",
-        y=1.02,
-        fontsize=16,
-    )
-    plt.show()
-
-
 plot_row_similarity_distribution(row_similarities)
 
 
 # %% Statistical summary of scenario-wise similarities
-def summarize_row_characteristics(row_similarities: Dict):
-    """Provide statistical summary of inter-actor similarity patterns."""
-
-    print(f"=== SCENARIO-WISE SIMILARITY SUMMARY ===\n")
-
-    pair_stats = {}
-    for row_data in row_similarities.values():
-        for pair, similarity in row_data.items():
-            if pair not in pair_stats:
-                pair_stats[pair] = []
-            pair_stats[pair].append(similarity)
-
-    summary_data = []
-    for pair, similarities in pair_stats.items():
-        actor1, actor2 = pair.split("_vs_")
-        summary_data.append(
-            {
-                "Actor_1": actor1,
-                "Actor_2": actor2,
-                "Mean_Similarity": np.mean(similarities),
-                "Std_Similarity": np.std(similarities),
-                "Min_Similarity": np.min(similarities),
-                "Max_Similarity": np.max(similarities),
-                "Q25": np.percentile(similarities, 25),
-                "Q75": np.percentile(similarities, 75),
-            }
-        )
-
-    summary_df = pd.DataFrame(summary_data).sort_values(["Actor_1", "Actor_2"])
-    print(summary_df.round(4))
-
-    return summary_df
-
-
 row_summary_df = summarize_row_characteristics(row_similarities)
 
 # %% Save scenario-wise analysis results
-results_dir = Path("../results")
+results_dir = Path("../results/base")
 results_dir.mkdir(exist_ok=True)
 
 row_summary_dict = row_summary_df.to_dict("records")
@@ -327,103 +85,8 @@ print(
 
 
 # %% Display LLM-Human similarity edge cases
-def display_edge_llm_human_similarities(row_similarities: Dict, embeddings_dict: Dict):
-    """Display the top 5 answers with highest and lowest LLM-Human similarity."""
-
-    df_cleaned = pd.read_csv(
-        "../data/ethical_dilemmas_cleaned.csv"
-    )
-
-    llm_human_similarities = []
-
-    for row_idx, row_data in row_similarities.items():
-        for pair, similarity in row_data.items():
-            if "human" in pair and pair != "human_vs_human":
-                llm_model = pair.replace("_vs_human", "").replace("human_vs_", "")
-                llm_human_similarities.append(
-                    {
-                        "row_idx": row_idx,
-                        "llm_model": llm_model,
-                        "similarity": similarity,
-                        "pair": pair,
-                    }
-                )
-
-    llm_human_similarities.sort(key=lambda x: x["similarity"])
-
-    lowest_5 = llm_human_similarities[:5]
-    highest_5 = llm_human_similarities[-5:]
-
-    print("=" * 80)
-    print("EDGE LLM-HUMAN SIMILARITY CASES")
-    print("=" * 80)
-
-    print("\nTOP 5 LOWEST SIMILARITY CASES (Most semantically different answers)")
-    print("-" * 60)
-
-    for i, case in enumerate(lowest_5, 1):
-        row_idx = case["row_idx"]
-        llm_model = case["llm_model"]
-        similarity = case["similarity"]
-
-        scenario = df_cleaned.iloc[row_idx]
-        scenario_id = scenario["submission_id"]
-        title = scenario["title"]
-
-        human_comment = scenario["top_comment"]
-
-        llm_reason = None
-        for reason_col in [
-            f"{llm_model}_reason_1",
-            f"{llm_model}_reason_2",
-            f"{llm_model}_reason_3",
-        ]:
-            if reason_col in scenario and pd.notna(scenario[reason_col]):
-                llm_reason = scenario[reason_col]
-                break
-
-        print(
-            f"\n{i}. Similarity: {similarity:.4f} | Scenario ID: {scenario_id} | Model: {llm_model.upper()}"
-        )
-        print(f"   Title: {title}")
-        print(f"   Human Comment: {human_comment}")
-        print(f"   {llm_model.upper()} Reasoning: {llm_reason}")
-
-    print("\nTOP 5 HIGHEST SIMILARITY CASES (Most semantically similar answers)")
-    print("-" * 60)
-
-    for i, case in enumerate(highest_5, 1):
-        row_idx = case["row_idx"]
-        llm_model = case["llm_model"]
-        similarity = case["similarity"]
-
-        scenario = df_cleaned.iloc[row_idx]
-        scenario_id = scenario["submission_id"]
-        title = scenario["title"]
-
-        human_comment = scenario["top_comment"]
-
-        llm_reason = None
-        for reason_col in [
-            f"{llm_model}_reason_1",
-            f"{llm_model}_reason_2",
-            f"{llm_model}_reason_3",
-        ]:
-            if reason_col in scenario and pd.notna(scenario[reason_col]):
-                llm_reason = scenario[reason_col]
-                break
-
-        print(
-            f"\n{i}. Similarity: {similarity:.4f} | Scenario ID: {scenario_id} | Model: {llm_model.upper()}"
-        )
-        print(f"   Title: {title}")
-        print(f"   Human Comment: {human_comment}")
-        print(f"   {llm_model.upper()} Reasoning: {llm_reason}")
-
-    return
-
-
-display_edge_llm_human_similarities(row_similarities, embeddings_dict)
+df_cleaned = pd.read_csv("../data/ethical_dilemmas_cleaned.csv")
+display_edge_llm_human_similarities(row_similarities, df_cleaned)
 
 # %% [markdown]
 # ## 2. Actor-wise Analysis
@@ -1014,7 +677,7 @@ def analyze_reason_similarities(
     return reason_similarities
 
 
-cache_path = Path("../results/reason_similarities.pkl")
+cache_path = Path("../results/base/reason_similarities.pkl")
 if cache_path.exists():
     with open(cache_path, "rb") as f:
         reason_similarities = pickle.load(f)
