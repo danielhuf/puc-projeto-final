@@ -1,0 +1,82 @@
+[
+  {
+    "Actor": "claude",
+    "Mean Similarity": 0.7839033007621765,
+    "Std Similarity": 0.09385589510202408,
+    "Min Similarity": 0.4325263500213623,
+    "Max Similarity": 0.9532564878463745,
+    "Q25": 0.7144659161567688,
+    "Q75": 0.853256344795227,
+    "Num Reasons": 2
+  },
+  {
+    "Actor": "gemini",
+    "Mean Similarity": 0.7831200361251831,
+    "Std Similarity": 0.09652970731258392,
+    "Min Similarity": 0.4958185851573944,
+    "Max Similarity": 0.9358051419258118,
+    "Q25": 0.7279021739959717,
+    "Q75": 0.8668578267097473,
+    "Num Reasons": 2
+  },
+  {
+    "Actor": "gemma",
+    "Mean Similarity": 0.5145288109779358,
+    "Std Similarity": 0.14290198683738708,
+    "Min Similarity": 0.15163175761699677,
+    "Max Similarity": 0.8251562118530273,
+    "Q25": 0.426482230424881,
+    "Q75": 0.6131576299667358,
+    "Num Reasons": 2
+  },
+  {
+    "Actor": "gpt3.5",
+    "Mean Similarity": 0.7947916984558105,
+    "Std Similarity": 0.08128486573696136,
+    "Min Similarity": 0.5566262602806091,
+    "Max Similarity": 0.9714760184288025,
+    "Q25": 0.7458340525627136,
+    "Q75": 0.8496213555335999,
+    "Num Reasons": 2
+  },
+  {
+    "Actor": "gpt4",
+    "Mean Similarity": 0.7946627736091614,
+    "Std Similarity": 0.07930836081504822,
+    "Min Similarity": 0.5368037819862366,
+    "Max Similarity": 0.9302337169647217,
+    "Q25": 0.7618483901023865,
+    "Q75": 0.8531917929649353,
+    "Num Reasons": 2
+  },
+  {
+    "Actor": "human",
+    "Mean Similarity": 1.0,
+    "Std Similarity": 0.0,
+    "Min Similarity": 1.0,
+    "Max Similarity": 1.0,
+    "Q25": 1.0,
+    "Q75": 1.0,
+    "Num Reasons": 1
+  },
+  {
+    "Actor": "llama",
+    "Mean Similarity": 0.638828694820404,
+    "Std Similarity": 0.22587160766124725,
+    "Min Similarity": 0.10469101369380951,
+    "Max Similarity": 0.9639724493026733,
+    "Q25": 0.4923444986343384,
+    "Q75": 0.811810314655304,
+    "Num Reasons": 2
+  },
+  {
+    "Actor": "mistral",
+    "Mean Similarity": 0.3962142765522003,
+    "Std Similarity": 0.22009572386741638,
+    "Min Similarity": -0.03857577592134476,
+    "Max Similarity": 0.8200316429138184,
+    "Q25": 0.23160097002983093,
+    "Q75": 0.5697340965270996,
+    "Num Reasons": 2
+  }
+]

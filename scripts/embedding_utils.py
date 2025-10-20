@@ -6,13 +6,16 @@ to avoid code duplication and ensure consistency across different language analy
 """
 
 import pandas as pd
+import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.preprocessing import normalize
 from typing import List, Tuple, Dict
+from pathlib import Path
 from tqdm import tqdm
 from matplotlib.colors import Normalize
+import json
 
 plt.rcParams["figure.max_open_warning"] = 0
 plt.rcParams["figure.dpi"] = 100
@@ -21,21 +24,20 @@ plt.rcParams["savefig.dpi"] = 100
 plt.style.use("seaborn-v0_8")
 
 
-def load_embeddings(embeddings_file: str) -> Tuple[pd.DataFrame, Dict[str, np.ndarray]]:
+def load_embeddings(embeddings_file: str) -> Dict[str, np.ndarray]:
     """Load embeddings from CSV and organize them by column.
 
     Args:
         embeddings_file: Path to the CSV file containing embeddings
 
     Returns:
-        Tuple of (DataFrame, embeddings_dict) where embeddings_dict maps column names to numpy arrays
+        Dictionary where keys are column names and values are numpy arrays
     """
     df = pd.read_csv(embeddings_file)
-
     embedding_cols = [col for col in df.columns if col.endswith("_embedding")]
-
     embeddings_dict = {}
-    for col in tqdm(embedding_cols, desc="Processing embedding columns"):
+
+    for col in embedding_cols:
 
         def parse_embedding(x):
             """Convert string representation to numpy array."""
@@ -44,11 +46,10 @@ def load_embeddings(embeddings_file: str) -> Tuple[pd.DataFrame, Dict[str, np.nd
             return np.fromstring(x.strip("[]"), sep=" ", dtype=np.float32)
 
         embeddings = df[col].apply(parse_embedding).values
-
         embeddings_array = np.vstack(embeddings)
         embeddings_dict[col] = embeddings_array
 
-    return df, embeddings_dict
+    return embeddings_dict
 
 
 def analyze_row_similarities(
@@ -183,7 +184,47 @@ def identify_actors_and_reasons(
     return actors, reason_types
 
 
-def plot_row_similarity_distribution(row_similarities: Dict):
+def load_or_compute_similarities(
+    language_code, embeddings_dict, actors, reason_types, similarity_type
+):
+    """
+    Load similarities from cache or compute them if not cached.
+
+    Args:
+        language_code: Language code (br, de, es, fr)
+        embeddings_dict: Dictionary containing embeddings
+        actors: List of actors
+        reason_types: List of reason types
+        similarity_type: Type of similarity ('row' or 'reason')
+
+    Returns:
+        Similarities data
+    """
+    cache_path = Path(f"../results/{language_code}/{similarity_type}_similarities.pkl")
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if cache_path.exists():
+        with open(cache_path, "rb") as f:
+            similarities = pickle.load(f)
+    else:
+        if similarity_type == "row":
+            similarities = analyze_row_similarities(
+                embeddings_dict, actors, reason_types
+            )
+        elif similarity_type == "reason":
+            similarities = analyze_reason_similarities(
+                embeddings_dict, actors, reason_types
+            )
+        else:
+            raise ValueError("similarity_type must be 'row' or 'reason'")
+
+        with open(cache_path, "wb") as f:
+            pickle.dump(similarities, f)
+
+    return similarities
+
+
+def plot_row_similarity_distribution(row_similarities: Dict, language_code: str):
     """Plot distribution of similarities across scenarios.
 
     Displays mean similarities across all available reason type combinations
@@ -263,7 +304,7 @@ def plot_row_similarity_distribution(row_similarities: Dict):
 
     plt.tight_layout()
     plt.suptitle(
-        "Distribution of Scenario-wise Similarities Between Actors",
+        f"Distribution of Scenario-wise Similarities Between Actors ({language_code.upper()})",
         y=-0.02,
         fontsize=24,
         fontweight="bold",
@@ -271,10 +312,10 @@ def plot_row_similarity_distribution(row_similarities: Dict):
     plt.show()
 
 
-def summarize_row_characteristics(row_similarities: Dict):
+def summarize_row_characteristics(row_similarities: Dict, language_code: str):
     """Provide statistical summary of inter-actor similarity patterns."""
 
-    print(f"=== SCENARIO-WISE SIMILARITY SUMMARY ===\n")
+    print(f"\n=== SCENARIO-WISE SIMILARITY SUMMARY ({language_code.upper()}) ===\n")
 
     pair_stats = {}
     for row_data in row_similarities.values():
@@ -305,8 +346,29 @@ def summarize_row_characteristics(row_similarities: Dict):
     return summary_df
 
 
+def save_analysis_results(
+    language_code: str, summary_df: pd.DataFrame, analysis_type: str
+):
+    """
+    Save analysis results to JSON file.
+
+    Args:
+        language_code: Language code (br, de, es, fr)
+        summary_df: DataFrame containing summary statistics
+        analysis_type: Type of analysis ('scenario_wise', 'actor_wise', 'reason_wise')
+    """
+    results_dir = Path(f"../results/{language_code}")
+    results_dir.mkdir(exist_ok=True)
+
+    summary_dict = summary_df.to_dict("records")
+    output_file = results_dir / f"{analysis_type}_analysis_results.json"
+
+    with open(output_file, "w") as f:
+        json.dump(summary_dict, f, indent=2)
+
+
 def display_edge_llm_human_similarities(
-    row_similarities: Dict, df_cleaned: pd.DataFrame
+    row_similarities: Dict, df_cleaned: pd.DataFrame, language_code: str
 ):
     """Display the top 5 answers with highest and lowest LLM-Human similarity."""
 
@@ -330,8 +392,8 @@ def display_edge_llm_human_similarities(
     lowest_5 = llm_human_similarities[:5]
     highest_5 = llm_human_similarities[-5:]
 
-    print("=" * 80)
-    print("EDGE LLM-HUMAN SIMILARITY CASES")
+    print("\n" + "=" * 80)
+    print(f"EDGE LLM-HUMAN SIMILARITY CASES ({language_code.upper()})\n")
     print("=" * 80)
 
     print("\nTOP 5 LOWEST SIMILARITY CASES (Most semantically different answers)")
@@ -480,7 +542,7 @@ def analyze_column_similarities(
     return actor_similarities
 
 
-def plot_column_similarity_comparison(column_similarities: Dict):
+def plot_column_similarity_comparison(column_similarities: Dict, language_code: str):
     """Compare intra-actor similarity distributions."""
 
     actor_names = list(column_similarities.keys())
@@ -544,17 +606,17 @@ def plot_column_similarity_comparison(column_similarities: Dict):
     for patch in box_plot["boxes"]:
         patch.set_facecolor("skyblue")
         patch.set_alpha(0.8)
-    ax_box.set_title("Intra-Actor Similarity Comparison")
+    ax_box.set_title(f"Intra-Actor Similarity Comparison ({language_code.upper()})")
     ax_box.grid(True, alpha=0.3)
 
     plt.tight_layout()
     plt.show()
 
 
-def summarize_column_characteristics(column_similarities: Dict):
+def summarize_column_characteristics(column_similarities: Dict, language_code: str):
     """Provide statistical summary of each actor's characteristics."""
 
-    print(f"=== ACTOR-WISE SIMILARITY SUMMARY ===\n")
+    print(f"\n=== ACTOR-WISE SIMILARITY SUMMARY ({language_code.upper()}) ===\n")
 
     summary_data = []
     for actor, data in column_similarities.items():
@@ -582,6 +644,7 @@ def display_edge_scenario_similarities(
     actors: List[str],
     reason_types: List[str],
     df_cleaned: pd.DataFrame,
+    language_code: str,
 ):
     """Display the top 5 answers with highest and lowest scenario similarity for both humans and LLMs."""
 
@@ -677,8 +740,8 @@ def display_edge_scenario_similarities(
     llm_lowest_5 = all_llm_lowest[:5]
     llm_highest_5 = all_llm_highest[:5]
 
-    print("=" * 100)
-    print("EDGE SCENARIO SIMILARITY CASES")
+    print("\n" + "=" * 100)
+    print(f"EDGE SCENARIO SIMILARITY CASES ({language_code.upper()})")
     print("=" * 100)
 
     print("\n👥 HUMAN RESPONSES")
@@ -918,7 +981,7 @@ def analyze_reason_similarities(
     return reason_similarities
 
 
-def plot_reason_similarity_comparison(reason_similarities: Dict):
+def plot_reason_similarity_comparison(reason_similarities: Dict, language_code: str):
     """Compare reason-wise similarity distributions with separate subplots for each actor."""
 
     actor_names = list(reason_similarities.keys())
@@ -986,17 +1049,17 @@ def plot_reason_similarity_comparison(reason_similarities: Dict):
     for patch in box_plot["boxes"]:
         patch.set_facecolor("skyblue")
         patch.set_alpha(0.8)
-    ax_box.set_title("Reason-wise Similarity Comparison")
+    ax_box.set_title(f"Reason-wise Similarity Comparison ({language_code.upper()})")
     ax_box.grid(True, alpha=0.3)
 
     plt.tight_layout()
     plt.show()
 
 
-def summarize_reason_characteristics(reason_similarities: Dict):
+def summarize_reason_characteristics(reason_similarities: Dict, language_code: str):
     """Provide statistical summary of each actor's reason-wise characteristics."""
 
-    print(f"=== REASON-WISE SIMILARITY SUMMARY ===\n")
+    print(f"\n=== REASON-WISE SIMILARITY SUMMARY ({language_code.upper()}) ===\n")
 
     summary_data = []
     for actor, data in reason_similarities.items():
@@ -1021,7 +1084,10 @@ def summarize_reason_characteristics(reason_similarities: Dict):
 
 
 def cross_analyze_actor_similarity(
-    row_similarities: Dict, column_similarities: Dict, reason_similarities: Dict
+    row_similarities: Dict,
+    column_similarities: Dict,
+    reason_similarities: Dict,
+    language_code: str,
 ):
     """Analyze the relationship between inter-actor similarity and intra-actor similarity."""
 
@@ -1092,14 +1158,14 @@ def cross_analyze_actor_similarity(
     plt.xlabel("1 - Intra-Actor Similarity")
     plt.ylabel("Inter-Actor Similarity")
 
-    title = "Intra-Actor similarity vs. inter-Actor similarity Analysis (Color = Reason-wise consistency)"
+    title = f"Intra-Actor similarity vs. inter-Actor similarity Analysis (Color = Reason-wise consistency) ({language_code.upper()})"
     plt.title(title)
     plt.grid(True, alpha=0.3)
 
     plt.tight_layout()
     plt.show()
 
-    print("=== CROSS-ANALYSIS RESULTS ===")
+    print(f"\n=== CROSS-ANALYSIS RESULTS ({language_code.upper()}) ===\n")
     display_cols = [
         "Actor",
         "Intra-Actor_Diversity_Score",
