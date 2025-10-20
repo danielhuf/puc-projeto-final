@@ -35,6 +35,20 @@ COLUMNS_TO_CLEAN = [
     "gemma_reason_2",
 ]
 
+REDDIT_LABEL_MAPPINGS = {
+    "br": {
+        "EOB": "YTA",
+        "EOT": "YTA",
+        "NEOB": "NTA",
+        "NGM": "NAH",
+        "TEOB": "ESH",
+        "INFO": "INFO",
+    },
+    "de": {"BDA": "YTA", "NDA": "NTA", "KAH": "NAH", "ASA": "ESH", "INFO": "INFO"},
+    "es": {},
+    "fr": {"TTB": "YTA", "PTB": "NTA", "ATB": "NAH", "TLM": "ESH", "INFO": "INFO"},
+}
+
 
 def clean_text(text):
     """
@@ -84,10 +98,39 @@ def clean_text(text):
     return text
 
 
+def extract_reddit_label(comment_text, language_code):
+    """
+    Extract reddit label from comment text based on language-specific mappings.
+
+    Args:
+        comment_text: string containing the comment text
+        language_code: language code ('br', 'de', 'es', 'fr')
+
+    Returns:
+        English reddit label or None if no match found
+    """
+    if pd.isna(comment_text) or not isinstance(comment_text, str):
+        return None
+
+    label_mapping = REDDIT_LABEL_MAPPINGS.get(language_code, {})
+
+    # Spanish case
+    if not label_mapping:
+        return None
+
+    comment_upper = comment_text.upper()
+
+    for local_label, english_label in label_mapping.items():
+        if local_label.upper() in comment_upper:
+            return english_label
+
+    return None
+
+
 def clean_dataframe(df, filename):
     """
-    Clean a dataframe by removing rows where any reason column has a null value
-    and cleaning malformed text in specific columns.
+    Clean a dataframe by removing rows where any reason column has a null value,
+    cleaning malformed text in specific columns, and adding reddit_label column.
 
     Args:
         df: pandas DataFrame to clean
@@ -109,6 +152,11 @@ def clean_dataframe(df, filename):
     columns_to_clean = [col for col in COLUMNS_TO_CLEAN if col in df_cleaned.columns]
     for col in columns_to_clean:
         df_cleaned[col] = df_cleaned[col].apply(clean_text)
+
+    language_code = filename.replace("ethical_dilemmas_", "").replace(".csv", "")
+    df_cleaned["reddit_label"] = df_cleaned["top_comment"].apply(
+        lambda x: extract_reddit_label(x, language_code)
+    )
 
     final_rows = len(df_cleaned)
     print(f"Final number of rows: {final_rows}")
