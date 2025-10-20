@@ -1,0 +1,50 @@
+[
+  {
+    "Actor": "claude",
+    "Intra-Actor_Diversity_Score": 0.4038313627243042,
+    "Inter-Actor_Similarity_Score": 0.4838754645784973,
+    "Reason_Consistency_Score": 0.753157377243042
+  },
+  {
+    "Actor": "gemini",
+    "Intra-Actor_Diversity_Score": 0.45865052938461304,
+    "Inter-Actor_Similarity_Score": 0.48259508903165077,
+    "Reason_Consistency_Score": 0.7397128939628601
+  },
+  {
+    "Actor": "gemma",
+    "Intra-Actor_Diversity_Score": 0.4506276845932007,
+    "Inter-Actor_Similarity_Score": 0.35396575434646094,
+    "Reason_Consistency_Score": 0.48605701327323914
+  },
+  {
+    "Actor": "gpt3.5",
+    "Intra-Actor_Diversity_Score": 0.4534192681312561,
+    "Inter-Actor_Similarity_Score": 0.48652047919718394,
+    "Reason_Consistency_Score": 0.7160019874572754
+  },
+  {
+    "Actor": "gpt4",
+    "Intra-Actor_Diversity_Score": 0.427468478679657,
+    "Inter-Actor_Similarity_Score": 0.491324016595387,
+    "Reason_Consistency_Score": 0.7353405356407166
+  },
+  {
+    "Actor": "human",
+    "Intra-Actor_Diversity_Score": 0.5703414678573608,
+    "Inter-Actor_Similarity_Score": 0.36772826090153105,
+    "Reason_Consistency_Score": 1.0
+  },
+  {
+    "Actor": "llama",
+    "Intra-Actor_Diversity_Score": 0.5688782930374146,
+    "Inter-Actor_Similarity_Score": 0.2058133417618584,
+    "Reason_Consistency_Score": 0.7304210662841797
+  },
+  {
+    "Actor": "mistral",
+    "Intra-Actor_Diversity_Score": 0.6414339542388916,
+    "Inter-Actor_Similarity_Score": 0.3028712562032639,
+    "Reason_Consistency_Score": 0.35699769854545593
+  }
+]

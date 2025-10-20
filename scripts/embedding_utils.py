@@ -305,7 +305,7 @@ def plot_row_similarity_distribution(row_similarities: Dict, language_code: str)
     plt.tight_layout()
     plt.suptitle(
         f"Distribution of Scenario-wise Similarities Between Actors ({language_code.upper()})",
-        y=-0.02,
+        y=1.02,
         fontsize=24,
         fontweight="bold",
     )
