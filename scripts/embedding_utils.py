@@ -1151,7 +1151,7 @@ def cross_analyze_multiple_languages(
     """Analyze the relationship between inter-actor similarity and intra-actor similarity across multiple languages.
     Shows Base as a single plot and other languages in a 2x2 grid."""
 
-    def create_single_plot(ax, language_code, data, is_base=False):
+    def create_single_plot(ax, language_code, data, norm, is_base=False):
         """Helper function to create a single cross-analysis plot."""
         row_similarities = data["row_similarities"]
         column_similarities = data["column_similarities"]
@@ -1193,9 +1193,6 @@ def cross_analyze_multiple_languages(
         plot_df = comparison_df.dropna(subset=["Reason_Consistency_Score"])
 
         if not plot_df.empty:
-            min_val = 0.0
-            max_val = 1.0
-            norm = Normalize(vmin=min_val, vmax=max_val)
 
             scatter = ax.scatter(
                 plot_df["Intra-Actor_Diversity_Score"],
@@ -1235,8 +1232,18 @@ def cross_analyze_multiple_languages(
     base_data = all_similarities_data["Base"]
     other_languages = [lang for lang in language_codes if lang != "Base"]
 
+    all_reason_scores = []
+    for lang_code in language_codes:
+        reason_similarities = all_similarities_data[lang_code]["reason_similarities"]
+        for actor, data in reason_similarities.items():
+            all_reason_scores.append(data["mean_similarity"])
+
+    global_min = min(all_reason_scores)
+    global_max = max(all_reason_scores)
+    norm = Normalize(vmin=global_min, vmax=global_max)
+
     fig1, ax_base = plt.subplots(figsize=(12, 8))
-    scatter_base = create_single_plot(ax_base, "Base", base_data, is_base=True)
+    scatter_base = create_single_plot(ax_base, "Base", base_data, norm, is_base=True)
 
     if scatter_base:
         fig1.colorbar(scatter_base, ax=ax_base, label="Reason Consistency Score")
@@ -1256,7 +1263,7 @@ def cross_analyze_multiple_languages(
     for i, language_code in enumerate(other_languages):
         ax = axes_flat[i]
         scatter = create_single_plot(
-            ax, language_code, all_similarities_data[language_code], is_base=False
+            ax, language_code, all_similarities_data[language_code], norm, is_base=False
         )
         if scatter is not None:
             scatter_last = scatter
