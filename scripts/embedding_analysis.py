@@ -26,6 +26,7 @@ from embedding_utils import (
     plot_reason_similarity_comparison,
     summarize_reason_characteristics,
     cross_analyze_actor_similarity,
+    cross_analyze_multiple_languages,
 )
 
 # %% Load and explore the embeddings data
@@ -225,19 +226,29 @@ save_analysis_results("fr", reason_summary_df_fr, "reason_wise")
 
 # %% Cross-analysis: Intra-Actor similarity vs. inter-Actor similarity
 cross_analysis_df_base = cross_analyze_actor_similarity(
-    row_similarities_base, column_similarities_base, reason_similarities_base, "Base"
+    row_similarities_base,
+    column_similarities_base,
+    reason_similarities_base,
 )
 cross_analysis_df_br = cross_analyze_actor_similarity(
-    row_similarities_br, column_similarities_br, reason_similarities_br, "Portuguese"
+    row_similarities_br,
+    column_similarities_br,
+    reason_similarities_br,
 )
 cross_analysis_df_de = cross_analyze_actor_similarity(
-    row_similarities_de, column_similarities_de, reason_similarities_de, "German"
+    row_similarities_de,
+    column_similarities_de,
+    reason_similarities_de,
 )
 cross_analysis_df_es = cross_analyze_actor_similarity(
-    row_similarities_es, column_similarities_es, reason_similarities_es, "Spanish"
+    row_similarities_es,
+    column_similarities_es,
+    reason_similarities_es,
 )
 cross_analysis_df_fr = cross_analyze_actor_similarity(
-    row_similarities_fr, column_similarities_fr, reason_similarities_fr, "French"
+    row_similarities_fr,
+    column_similarities_fr,
+    reason_similarities_fr,
 )
 
 # %% Save cross-analysis results
@@ -246,6 +257,38 @@ save_analysis_results("br", cross_analysis_df_br, "cross")
 save_analysis_results("de", cross_analysis_df_de, "cross")
 save_analysis_results("es", cross_analysis_df_es, "cross")
 save_analysis_results("fr", cross_analysis_df_fr, "cross")
+
+# %% Multi-language cross-analysis visualization
+all_similarities_data = {
+    "Base": {
+        "row_similarities": row_similarities_base,
+        "column_similarities": column_similarities_base,
+        "reason_similarities": reason_similarities_base,
+    },
+    "Portuguese": {
+        "row_similarities": row_similarities_br,
+        "column_similarities": column_similarities_br,
+        "reason_similarities": reason_similarities_br,
+    },
+    "German": {
+        "row_similarities": row_similarities_de,
+        "column_similarities": column_similarities_de,
+        "reason_similarities": reason_similarities_de,
+    },
+    "Spanish": {
+        "row_similarities": row_similarities_es,
+        "column_similarities": column_similarities_es,
+        "reason_similarities": reason_similarities_es,
+    },
+    "French": {
+        "row_similarities": row_similarities_fr,
+        "column_similarities": column_similarities_fr,
+        "reason_similarities": reason_similarities_fr,
+    },
+}
+
+language_codes = ["Base", "Portuguese", "German", "Spanish", "French"]
+cross_analyze_multiple_languages(all_similarities_data, language_codes)
 
 # %% [markdown]
 # ## Summary of Findings

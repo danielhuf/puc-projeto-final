@@ -567,7 +567,7 @@ def plot_column_similarity_comparison(column_similarities: Dict, language_code: 
     actor_names = list(column_similarities.keys())
     n_actors = len(actor_names)
 
-    height_ratios = [2.5] * n_actors + [3]
+    height_ratios = [3] + [2.5] * n_actors
 
     _, axes = plt.subplots(
         n_actors + 1,
@@ -576,10 +576,25 @@ def plot_column_similarity_comparison(column_similarities: Dict, language_code: 
         gridspec_kw={"height_ratios": height_ratios},
     )
 
+    ax_box = axes[0]
+
+    similarities_data = [data["similarities"] for data in column_similarities.values()]
+    actor_names = list(column_similarities.keys())
+
+    box_plot = ax_box.boxplot(
+        similarities_data, tick_labels=actor_names, patch_artist=True
+    )
+
+    for patch in box_plot["boxes"]:
+        patch.set_facecolor(get_language_color(language_code))
+        patch.set_alpha(0.8)
+    ax_box.set_title(f"Intra-Actor Similarity Comparison ({language_code.upper()})")
+    ax_box.grid(True, alpha=0.3)
+
     for i, (actor, data) in enumerate(
         tqdm(column_similarities.items(), desc="Plotting histograms")
     ):
-        ax = axes[i]
+        ax = axes[i + 1]
         ax.hist(
             data["similarities"],
             bins=30,
@@ -612,21 +627,6 @@ def plot_column_similarity_comparison(column_similarities: Dict, language_code: 
         )
         ax.set_xlim(0, 1)
         ax.legend()
-
-    ax_box = axes[-1]
-
-    similarities_data = [data["similarities"] for data in column_similarities.values()]
-    actor_names = list(column_similarities.keys())
-
-    box_plot = ax_box.boxplot(
-        similarities_data, tick_labels=actor_names, patch_artist=True
-    )
-
-    for patch in box_plot["boxes"]:
-        patch.set_facecolor(get_language_color(language_code))
-        patch.set_alpha(0.8)
-    ax_box.set_title(f"Intra-Actor Similarity Comparison ({language_code.upper()})")
-    ax_box.grid(True, alpha=0.3)
 
     plt.tight_layout()
     plt.show()
@@ -1006,7 +1006,7 @@ def plot_reason_similarity_comparison(reason_similarities: Dict, language_code: 
     actor_names = list(reason_similarities.keys())
     n_actors = len(actor_names)
 
-    height_ratios = [2.5] * n_actors + [3]
+    height_ratios = [3] + [2.5] * n_actors
 
     _, axes = plt.subplots(
         n_actors + 1,
@@ -1016,12 +1016,27 @@ def plot_reason_similarity_comparison(reason_similarities: Dict, language_code: 
     )
 
     if n_actors == 1:
-        axes = [axes[0], axes[1]]
+        axes = [axes[0], axes[1], axes[2]]
+
+    ax_box = axes[0]
+
+    similarities_data = [data["similarities"] for data in reason_similarities.values()]
+    actor_names = list(reason_similarities.keys())
+
+    box_plot = ax_box.boxplot(
+        similarities_data, tick_labels=actor_names, patch_artist=True
+    )
+
+    for patch in box_plot["boxes"]:
+        patch.set_facecolor(get_language_color(language_code))
+        patch.set_alpha(0.8)
+    ax_box.set_title(f"Reason-wise Similarity Comparison ({language_code.upper()})")
+    ax_box.grid(True, alpha=0.3)
 
     for i, (actor, data) in enumerate(
         tqdm(reason_similarities.items(), desc="Plotting reason similarities")
     ):
-        ax = axes[i]
+        ax = axes[i + 1]
         ax.hist(
             data["similarities"],
             bins=30,
@@ -1055,21 +1070,6 @@ def plot_reason_similarity_comparison(reason_similarities: Dict, language_code: 
         )
         ax.set_xlim(0, 1)
         ax.legend()
-
-    ax_box = axes[-1]
-
-    similarities_data = [data["similarities"] for data in reason_similarities.values()]
-    actor_names = list(reason_similarities.keys())
-
-    box_plot = ax_box.boxplot(
-        similarities_data, tick_labels=actor_names, patch_artist=True
-    )
-
-    for patch in box_plot["boxes"]:
-        patch.set_facecolor(get_language_color(language_code))
-        patch.set_alpha(0.8)
-    ax_box.set_title(f"Reason-wise Similarity Comparison ({language_code.upper()})")
-    ax_box.grid(True, alpha=0.3)
 
     plt.tight_layout()
     plt.show()
@@ -1106,7 +1106,6 @@ def cross_analyze_actor_similarity(
     row_similarities: Dict,
     column_similarities: Dict,
     reason_similarities: Dict,
-    language_code: str,
 ):
     """Analyze the relationship between inter-actor similarity and intra-actor similarity."""
 
@@ -1142,55 +1141,138 @@ def cross_analyze_actor_similarity(
 
     comparison_df = pd.DataFrame(comparison_data)
 
-    plt.figure(figsize=(12, 8))
+    return comparison_df
 
-    plot_df = comparison_df.dropna(subset=["Reason_Consistency_Score"])
 
-    min_val = plot_df["Reason_Consistency_Score"].min()
-    max_val = plot_df["Reason_Consistency_Score"].max()
+def cross_analyze_multiple_languages(
+    all_similarities_data: Dict[str, Dict],
+    language_codes: List[str],
+):
+    """Analyze the relationship between inter-actor similarity and intra-actor similarity across multiple languages.
+    Shows Base as a single plot and other languages in a 2x2 grid."""
 
-    norm = Normalize(vmin=min_val, vmax=max_val)
+    def create_single_plot(ax, language_code, data, is_base=False):
+        """Helper function to create a single cross-analysis plot."""
+        row_similarities = data["row_similarities"]
+        column_similarities = data["column_similarities"]
+        reason_similarities = data["reason_similarities"]
 
-    scatter = plt.scatter(
-        plot_df["Intra-Actor_Diversity_Score"],
-        plot_df["Inter-Actor_Similarity_Score"],
-        s=120,
-        alpha=0.8,
-        c=plot_df["Reason_Consistency_Score"],
-        cmap="Blues",
-        norm=norm,
-        edgecolors="black",
-        linewidth=0.5,
+        inter_actor_means = {}
+        for actor in column_similarities.keys():
+            actor_pairs = [
+                pair
+                for pair in list(row_similarities.values())[0].keys()
+                if actor in pair
+            ]
+            all_similarities = []
+
+            for row_data in row_similarities.values():
+                for pair in actor_pairs:
+                    if pair in row_data:
+                        all_similarities.append(row_data[pair])
+
+            if all_similarities:
+                inter_actor_means[actor] = np.mean(all_similarities)
+
+        comparison_data = []
+        for actor in column_similarities.keys():
+            if actor in inter_actor_means:
+                comparison_data.append(
+                    {
+                        "Actor": actor,
+                        "Intra-Actor_Diversity_Score": 1
+                        - column_similarities[actor]["mean_similarity"],
+                        "Inter-Actor_Similarity_Score": inter_actor_means[actor],
+                        "Reason_Consistency_Score": reason_similarities[actor][
+                            "mean_similarity"
+                        ],
+                    }
+                )
+
+        comparison_df = pd.DataFrame(comparison_data)
+        plot_df = comparison_df.dropna(subset=["Reason_Consistency_Score"])
+
+        if not plot_df.empty:
+            min_val = 0.0
+            max_val = 1.0
+            norm = Normalize(vmin=min_val, vmax=max_val)
+
+            scatter = ax.scatter(
+                plot_df["Intra-Actor_Diversity_Score"],
+                plot_df["Inter-Actor_Similarity_Score"],
+                s=120,
+                alpha=0.8,
+                c=plot_df["Reason_Consistency_Score"],
+                cmap="Blues",
+                norm=norm,
+                edgecolors="black",
+                linewidth=0.5,
+            )
+
+            for _, row in plot_df.iterrows():
+                ax.annotate(
+                    row["Actor"],
+                    (
+                        row["Intra-Actor_Diversity_Score"],
+                        row["Inter-Actor_Similarity_Score"],
+                    ),
+                    xytext=(5, 5),
+                    textcoords="offset points",
+                    fontweight="bold",
+                    fontsize=8 if not is_base else 10,
+                )
+
+            ax.set_xlabel("1 - Intra-Actor Similarity")
+            ax.set_ylabel("Inter-Actor Similarity")
+            ax.set_title(f"{language_code}")
+            ax.grid(True, alpha=0.3)
+            ax.set_xlim(0, 1)
+            ax.set_ylim(0, 1)
+
+            return scatter
+        return None
+
+    base_data = all_similarities_data["Base"]
+    other_languages = [lang for lang in language_codes if lang != "Base"]
+
+    fig1, ax_base = plt.subplots(figsize=(12, 8))
+    scatter_base = create_single_plot(ax_base, "Base", base_data, is_base=True)
+
+    if scatter_base:
+        fig1.colorbar(scatter_base, ax=ax_base, label="Reason Consistency Score")
+
+    plt.suptitle(
+        "Intra-Actor similarity vs. inter-Actor similarity Analysis - Base (Color = Reason-wise consistency)",
+        fontsize=16,
+        fontweight="bold",
     )
-
-    plt.colorbar(scatter, label="Reason Consistency Score")
-
-    for _, row in plot_df.iterrows():
-        plt.annotate(
-            row["Actor"],
-            (row["Intra-Actor_Diversity_Score"], row["Inter-Actor_Similarity_Score"]),
-            xytext=(5, 5),
-            textcoords="offset points",
-            fontweight="bold",
-        )
-
-    plt.xlabel("1 - Intra-Actor Similarity")
-    plt.ylabel("Inter-Actor Similarity")
-
-    title = f"Intra-Actor similarity vs. inter-Actor similarity Analysis (Color = Reason-wise consistency) ({language_code.upper()})"
-    plt.title(title)
-    plt.grid(True, alpha=0.3)
-
     plt.tight_layout()
     plt.show()
 
-    print(f"\n=== CROSS-ANALYSIS RESULTS ({language_code.upper()}) ===\n")
-    display_cols = [
-        "Actor",
-        "Intra-Actor_Diversity_Score",
-        "Inter-Actor_Similarity_Score",
-        "Reason_Consistency_Score",
-    ]
-    print(comparison_df[display_cols].round(4))
+    fig2, axes = plt.subplots(2, 2, figsize=(18, 12))
+    axes_flat = axes.flatten()
 
-    return comparison_df
+    scatter_last = None
+    for i, language_code in enumerate(other_languages):
+        ax = axes_flat[i]
+        scatter = create_single_plot(
+            ax, language_code, all_similarities_data[language_code], is_base=False
+        )
+        if scatter is not None:
+            scatter_last = scatter
+
+    plt.suptitle(
+        "Intra-Actor similarity vs. inter-Actor similarity Analysis - International (Color = Reason-wise consistency)",
+        fontsize=16,
+        fontweight="bold",
+    )
+
+    plt.tight_layout(rect=[0, 0, 0.92, 0.96])
+
+    if scatter_last:
+        cbar_ax = fig2.add_axes([0.93, 0.15, 0.02, 0.7])
+        fig2.colorbar(scatter_last, cax=cbar_ax, label="Reason Consistency Score")
+
+    plt.show()
+
+    return fig1, fig2
