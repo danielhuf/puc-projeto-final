@@ -15,7 +15,7 @@ from embedding_utils import (
     load_embeddings,
     load_or_compute_similarities,
     identify_actors_and_reasons,
-    plot_row_similarity_distribution,
+    plot_row_similarity_comparison,
     compute_global_similarity_bounds,
     compute_global_column_similarity_bounds,
     compute_global_reason_similarity_bounds,
@@ -80,11 +80,11 @@ all_row_similarities = {
 global_bounds = compute_global_similarity_bounds(all_row_similarities)
 
 # %% Visualize scenario-wise similarities with standardized axis ranges
-plot_row_similarity_distribution(row_similarities_base, "Base", global_bounds)
-plot_row_similarity_distribution(row_similarities_br, "Portuguese", global_bounds)
-plot_row_similarity_distribution(row_similarities_de, "German", global_bounds)
-plot_row_similarity_distribution(row_similarities_es, "Spanish", global_bounds)
-plot_row_similarity_distribution(row_similarities_fr, "French", global_bounds)
+plot_row_similarity_comparison(row_similarities_base, "Base", global_bounds)
+plot_row_similarity_comparison(row_similarities_br, "Portuguese", global_bounds)
+plot_row_similarity_comparison(row_similarities_de, "German", global_bounds)
+plot_row_similarity_comparison(row_similarities_es, "Spanish", global_bounds)
+plot_row_similarity_comparison(row_similarities_fr, "French", global_bounds)
 
 # %% Statistical summary of scenario-wise similarities
 row_summary_df_base = summarize_row_characteristics(row_similarities_base, "Base")

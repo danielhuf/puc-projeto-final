@@ -279,7 +279,7 @@ def compute_global_similarity_bounds(
     return global_min_sim, global_max_sim, global_min_density, global_max_density
 
 
-def plot_row_similarity_distribution(
+def plot_row_similarity_comparison(
     row_similarities: Dict,
     language_code: str,
     global_bounds: Tuple[float, float, float, float] = None,
@@ -339,18 +339,14 @@ def plot_row_similarity_distribution(
                         density=True,
                     )
 
-                    mean_sim = np.mean(similarities)
                     median_sim = np.median(similarities)
 
                     ax.axvline(
-                        mean_sim, color="red", linestyle="--", alpha=0.8, linewidth=1
-                    )
-                    ax.axvline(
-                        median_sim, color="blue", linestyle="-", alpha=0.8, linewidth=1
+                        median_sim, color="red", linestyle="--", alpha=0.8, linewidth=1
                     )
 
                     ax.set_title(
-                        f"{actors[j]} vs {actors[i+1]}\nMean: {mean_sim:.3f}",
+                        f"{actors[j]} vs {actors[i+1]}\nMedian: {median_sim:.3f}",
                         fontsize=12,
                         pad=4,
                     )
@@ -696,7 +692,6 @@ def plot_column_similarity_comparison(
             density=True,
         )
 
-        mean_sim = data["mean_similarity"]
         median_sim = np.median(data["similarities"])
         ax.set_title(f"{actor.upper()}")
         ax.set_xlabel("Cosine Similarity")
@@ -704,16 +699,9 @@ def plot_column_similarity_comparison(
         ax.grid(True, alpha=0.3)
 
         ax.axvline(
-            mean_sim,
+            median_sim,
             color="red",
             linestyle="--",
-            alpha=0.8,
-            label=f"Mean: {mean_sim:.3f}",
-        )
-        ax.axvline(
-            median_sim,
-            color="blue",
-            linestyle="-",
             alpha=0.8,
             label=f"Median: {median_sim:.3f}",
         )
@@ -1191,7 +1179,6 @@ def plot_reason_similarity_comparison(
             density=True,
         )
 
-        mean_sim = data["mean_similarity"]
         median_sim = np.median(data["similarities"])
         n_reasons = len(data["available_reasons"])
         ax.set_title(f"{actor.upper()} ({n_reasons} reasonings)")
@@ -1200,16 +1187,9 @@ def plot_reason_similarity_comparison(
         ax.grid(True, alpha=0.3)
 
         ax.axvline(
-            mean_sim,
+            median_sim,
             color="red",
             linestyle="--",
-            alpha=0.8,
-            label=f"Mean: {mean_sim:.3f}",
-        )
-        ax.axvline(
-            median_sim,
-            color="blue",
-            linestyle="-",
             alpha=0.8,
             label=f"Median: {median_sim:.3f}",
         )
