@@ -1,50 +1,50 @@
 [
   {
-    "Actor": "bison",
-    "Intra-Actor_Diversity_Score": 0.7151875495910645,
-    "Inter-Actor_Similarity_Score": 0.6131231147235383,
-    "Reason_Consistency_Score": 0.824047327041626
-  },
-  {
-    "Actor": "claude",
-    "Intra-Actor_Diversity_Score": 0.5686533451080322,
-    "Inter-Actor_Similarity_Score": 0.6967675637351498,
-    "Reason_Consistency_Score": 0.9062830209732056
-  },
-  {
-    "Actor": "gemma",
-    "Intra-Actor_Diversity_Score": 0.5018051862716675,
-    "Inter-Actor_Similarity_Score": 0.6530550361741086,
-    "Reason_Consistency_Score": 0.764004647731781
-  },
-  {
-    "Actor": "gpt3.5",
-    "Intra-Actor_Diversity_Score": 0.5847443342208862,
-    "Inter-Actor_Similarity_Score": 0.6744412607921673,
-    "Reason_Consistency_Score": 0.8295045495033264
-  },
-  {
-    "Actor": "gpt4",
-    "Intra-Actor_Diversity_Score": 0.680561900138855,
-    "Inter-Actor_Similarity_Score": 0.6471114772058133,
-    "Reason_Consistency_Score": 0.7674979567527771
-  },
-  {
-    "Actor": "human",
+    "Actor": "redditor",
     "Intra-Actor_Diversity_Score": 0.8160544037818909,
     "Inter-Actor_Similarity_Score": 0.433556822701761,
     "Reason_Consistency_Score": 1.0
   },
   {
+    "Actor": "gpt3.5",
+    "Intra-Actor_Diversity_Score": 0.5847443342208862,
+    "Inter-Actor_Similarity_Score": 0.674441260850675,
+    "Reason_Consistency_Score": 0.8295045495033264
+  },
+  {
+    "Actor": "gpt4",
+    "Intra-Actor_Diversity_Score": 0.680561900138855,
+    "Inter-Actor_Similarity_Score": 0.6471114774406324,
+    "Reason_Consistency_Score": 0.7674979567527771
+  },
+  {
+    "Actor": "claude",
+    "Intra-Actor_Diversity_Score": 0.5686533451080322,
+    "Inter-Actor_Similarity_Score": 0.6967675637643053,
+    "Reason_Consistency_Score": 0.9062830209732056
+  },
+  {
+    "Actor": "bison",
+    "Intra-Actor_Diversity_Score": 0.7151875495910645,
+    "Inter-Actor_Similarity_Score": 0.6131231147987907,
+    "Reason_Consistency_Score": 0.824047327041626
+  },
+  {
     "Actor": "llama",
     "Intra-Actor_Diversity_Score": 0.5235373973846436,
-    "Inter-Actor_Similarity_Score": 0.6757651979174462,
+    "Inter-Actor_Similarity_Score": 0.6757651978701671,
     "Reason_Consistency_Score": 0.8262686133384705
   },
   {
     "Actor": "mistral",
     "Intra-Actor_Diversity_Score": 0.5514962673187256,
-    "Inter-Actor_Similarity_Score": 0.6362767689394284,
+    "Inter-Actor_Similarity_Score": 0.6362767689291847,
     "Reason_Consistency_Score": 0.7293620109558105
+  },
+  {
+    "Actor": "gemma",
+    "Intra-Actor_Diversity_Score": 0.5018051862716675,
+    "Inter-Actor_Similarity_Score": 0.6530550361904592,
+    "Reason_Consistency_Score": 0.764004647731781
   }
 ]

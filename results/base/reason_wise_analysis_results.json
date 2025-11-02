@@ -50,16 +50,6 @@
     "Num Reasons": 2
   },
   {
-    "Actor": "human",
-    "Mean Similarity": 1.0,
-    "Std Similarity": 0.0,
-    "Min Similarity": 1.0,
-    "Max Similarity": 1.0,
-    "Q25": 1.0,
-    "Q75": 1.0,
-    "Num Reasons": 1
-  },
-  {
     "Actor": "llama",
     "Mean Similarity": 0.8262686133384705,
     "Std Similarity": 0.07928047329187393,
@@ -78,5 +68,15 @@
     "Q25": 0.6674099564552307,
     "Q75": 0.8125444054603577,
     "Num Reasons": 3
+  },
+  {
+    "Actor": "redditor",
+    "Mean Similarity": 1.0,
+    "Std Similarity": 0.0,
+    "Min Similarity": 1.0,
+    "Max Similarity": 1.0,
+    "Q25": 1.0,
+    "Q75": 1.0,
+    "Num Reasons": 1
   }
 ]

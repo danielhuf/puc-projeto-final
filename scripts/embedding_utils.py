@@ -110,7 +110,7 @@ def analyze_row_similarities(
     actor_reason_combinations = {}
     for actor in actors:
         available_reasons = []
-        if actor == "human":
+        if actor == "redditor":
             if "top_comment_embedding" in embeddings_dict:
                 available_reasons.append("top_comment")
         else:
@@ -137,12 +137,12 @@ def analyze_row_similarities(
                 pair_similarities = []
                 for reason1 in actor1_reasons:
                     for reason2 in actor2_reasons:
-                        if actor1 == "human":
+                        if actor1 == "redditor":
                             col_name1 = "top_comment_embedding"
                         else:
                             col_name1 = f"{actor1}_{reason1}_embedding"
 
-                        if actor2 == "human":
+                        if actor2 == "redditor":
                             col_name2 = "top_comment_embedding"
                         else:
                             col_name2 = f"{actor2}_{reason2}_embedding"
@@ -185,7 +185,7 @@ def identify_actors_and_reasons(
             continue
 
         if col == "top_comment_embedding":
-            actors.add("human")
+            actors.add("redditor")
             reason_types.add("top_comment")
             continue
 
@@ -197,7 +197,25 @@ def identify_actors_and_reasons(
         actors.add(actor)
         reason_types.add(reason)
 
-    actors = sorted(list(actors))
+    desired_order = [
+        "redditor",
+        "gpt3.5",
+        "gpt4",
+        "claude",
+        "bison",
+        "gemini",
+        "llama",
+        "mistral",
+        "gemma",
+    ]
+    actors_list = list(actors)
+    actors_known = [a for a in actors_list if a in desired_order]
+    actors_unknown = sorted([a for a in actors_list if a not in desired_order])
+    actors_sorted = (
+        sorted(actors_known, key=lambda a: desired_order.index(a)) + actors_unknown
+    )
+
+    actors = actors_sorted
     reason_types = sorted(list(reason_types))
 
     return actors, reason_types
@@ -303,12 +321,29 @@ def plot_row_similarity_comparison(
                 pair_similarities[pair] = []
             pair_similarities[pair].append(sim)
 
-    actors = set()
+    # Extract unique actors and apply custom ordering
+    actors_set = set()
     for pair in pair_similarities.keys():
         actor1, actor2 = pair.split("_vs_")
-        actors.add(actor1)
-        actors.add(actor2)
-    actors = sorted(list(actors))
+        actors_set.add(actor1)
+        actors_set.add(actor2)
+
+    # Apply custom actor ordering
+    desired_order = [
+        "redditor",
+        "gpt3.5",
+        "gpt4",
+        "claude",
+        "bison",
+        "gemini",
+        "llama",
+        "mistral",
+        "gemma",
+    ]
+    actors_list = list(actors_set)
+    actors_known = [a for a in actors_list if a in desired_order]
+    actors_unknown = sorted([a for a in actors_list if a not in desired_order])
+    actors = sorted(actors_known, key=lambda a: desired_order.index(a)) + actors_unknown
 
     n_actors = len(actors)
 
@@ -370,7 +405,7 @@ def plot_row_similarity_comparison(
 
     plt.tight_layout()
     plt.suptitle(
-        f"Distribution of Scenario-wise Similarities Between Actors ({language_code.upper()})",
+        f"Scenario-wise Similarity Distributions ({language_code})",
         y=1.02,
         fontsize=24,
         fontweight="bold",
@@ -436,15 +471,15 @@ def save_analysis_results(
 def display_edge_llm_human_similarities(
     row_similarities: Dict, df_cleaned: pd.DataFrame, language_code: str
 ):
-    """Display the top 5 answers with highest and lowest LLM-Human similarity."""
+    """Display the top 5 answers with highest and lowest LLM-Redditor similarity."""
 
-    llm_human_similarities = []
+    llm_redditor_similarities = []
 
     for row_idx, row_data in row_similarities.items():
         for pair, similarity in row_data.items():
-            if "human" in pair and pair != "human_vs_human":
-                llm_model = pair.replace("_vs_human", "").replace("human_vs_", "")
-                llm_human_similarities.append(
+            if "redditor" in pair and pair != "redditor_vs_redditor":
+                llm_model = pair.replace("_vs_redditor", "").replace("redditor_vs_", "")
+                llm_redditor_similarities.append(
                     {
                         "row_idx": row_idx,
                         "llm_model": llm_model,
@@ -453,13 +488,13 @@ def display_edge_llm_human_similarities(
                     }
                 )
 
-    llm_human_similarities.sort(key=lambda x: x["similarity"])
+    llm_redditor_similarities.sort(key=lambda x: x["similarity"])
 
-    lowest_5 = llm_human_similarities[:5]
-    highest_5 = llm_human_similarities[-5:]
+    lowest_5 = llm_redditor_similarities[:5]
+    highest_5 = llm_redditor_similarities[-5:]
 
     print("\n" + "=" * 80)
-    print(f"EDGE LLM-HUMAN SIMILARITY CASES ({language_code.upper()})\n")
+    print(f"EDGE LLM-REDDITOR SIMILARITY CASES ({language_code.upper()})\n")
     print("=" * 80)
 
     print("\nTOP 5 LOWEST SIMILARITY CASES (Most semantically different answers)")
@@ -490,7 +525,7 @@ def display_edge_llm_human_similarities(
             f"\n{i}. Similarity: {similarity:.4f} | Scenario ID: {scenario_id} | Model: {llm_model.upper()}"
         )
         print(f"   Title: {title}")
-        print(f"   Human Comment: {human_comment}")
+        print(f"   Redditor Comment: {human_comment}")
         print(f"   {llm_model.upper()} Reasoning: {llm_reason}")
 
     print("\nTOP 5 HIGHEST SIMILARITY CASES (Most semantically similar answers)")
@@ -521,7 +556,7 @@ def display_edge_llm_human_similarities(
             f"\n{i}. Similarity: {similarity:.4f} | Scenario ID: {scenario_id} | Model: {llm_model.upper()}"
         )
         print(f"   Title: {title}")
-        print(f"   Human Comment: {human_comment}")
+        print(f"   Redditor Comment: {human_comment}")
         print(f"   {llm_model.upper()} Reasoning: {llm_reason}")
 
     return
@@ -569,7 +604,7 @@ def analyze_column_similarities(
         available_reasons = []
         actor_embeddings = {}
 
-        if actor == "human":
+        if actor == "redditor":
             if "top_comment_embedding" in embeddings_dict:
                 available_reasons.append("top_comment")
                 actor_embeddings["top_comment"] = embeddings_dict[
@@ -655,34 +690,26 @@ def plot_column_similarity_comparison(
     actor_names = list(column_similarities.keys())
     n_actors = len(actor_names)
 
-    height_ratios = [3] + [2.5] * n_actors
+    height_ratios = [2.5] * n_actors + [3]
 
-    _, axes = plt.subplots(
+    fig, axes = plt.subplots(
         n_actors + 1,
         1,
         figsize=(12, 2.5 * n_actors + 3),
         gridspec_kw={"height_ratios": height_ratios},
     )
 
-    ax_box = axes[0]
-
-    similarities_data = [data["similarities"] for data in column_similarities.values()]
-    actor_names = list(column_similarities.keys())
-
-    box_plot = ax_box.boxplot(
-        similarities_data, tick_labels=actor_names, patch_artist=True
+    plt.suptitle(
+        f"Actor-wise Similarity Distributions ({language_code.upper()})",
+        fontsize=16,
+        fontweight="bold",
+        y=0.995,
     )
-
-    for patch in box_plot["boxes"]:
-        patch.set_facecolor(get_language_color(language_code))
-        patch.set_alpha(0.8)
-    ax_box.set_title(f"Intra-Actor Similarity Comparison ({language_code.upper()})")
-    ax_box.grid(True, alpha=0.3)
 
     for i, (actor, data) in enumerate(
         tqdm(column_similarities.items(), desc="Plotting histograms")
     ):
-        ax = axes[i + 1]
+        ax = axes[i]
         ax.hist(
             data["similarities"],
             bins=30,
@@ -714,7 +741,21 @@ def plot_column_similarity_comparison(
             ax.set_xlim(0, 1)
         ax.legend()
 
-    plt.tight_layout()
+    ax_box = axes[-1]
+
+    similarities_data = [data["similarities"] for data in column_similarities.values()]
+    actor_names_upper = [name.upper() for name in actor_names]
+
+    box_plot = ax_box.boxplot(
+        similarities_data, tick_labels=actor_names_upper, patch_artist=True
+    )
+
+    for patch in box_plot["boxes"]:
+        patch.set_facecolor(get_language_color(language_code))
+        patch.set_alpha(0.8)
+    ax_box.grid(True, alpha=0.3)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.99])
     plt.show()
 
 
@@ -751,7 +792,7 @@ def display_edge_scenario_similarities(
     df_cleaned: pd.DataFrame,
     language_code: str,
 ):
-    """Display the top 5 answers with highest and lowest scenario similarity for both humans and LLMs."""
+    """Display the top 5 answers with highest and lowest scenario similarity for both redditors and LLMs."""
 
     actor_scenario_similarities = {}
 
@@ -760,7 +801,7 @@ def display_edge_scenario_similarities(
         available_reasons = []
         actor_embeddings = {}
 
-        if actor == "human":
+        if actor == "redditor":
             if "top_comment_embedding" in embeddings_dict:
                 available_reasons.append("top_comment")
                 actor_embeddings["top_comment"] = embeddings_dict[
@@ -822,7 +863,9 @@ def display_edge_scenario_similarities(
             "highest": highest_pairs,
         }
 
-    human_data = actor_scenario_similarities.get("human", {"lowest": [], "highest": []})
+    human_data = actor_scenario_similarities.get(
+        "redditor", {"lowest": [], "highest": []}
+    )
     human_lowest_5 = human_data["lowest"]
     human_highest_5 = human_data["highest"]
 
@@ -830,7 +873,7 @@ def display_edge_scenario_similarities(
     all_llm_highest = []
 
     for actor in actors:
-        if actor != "human":
+        if actor != "redditor":
             actor_data = actor_scenario_similarities.get(
                 actor, {"lowest": [], "highest": []}
             )
@@ -849,7 +892,7 @@ def display_edge_scenario_similarities(
     print(f"EDGE SCENARIO SIMILARITY CASES ({language_code.upper()})")
     print("=" * 100)
 
-    print("\n👥 HUMAN RESPONSES")
+    print("\n👥 REDDITOR RESPONSES")
     print("=" * 60)
 
     print("\nTOP 5 LOWEST SIMILARITY CASES (Most semantically different answers)")
@@ -869,9 +912,9 @@ def display_edge_scenario_similarities(
 
         print(f"\n{i}. Similarity: {similarity:.4f}")
         print(f"   Scenario 1 (ID: {scenario1['submission_id']}): {title1}")
-        print(f"   Human Comment 1: {comment1}")
+        print(f"   Redditor Comment 1: {comment1}")
         print(f"   Scenario 2 (ID: {scenario2['submission_id']}): {title2}")
-        print(f"   Human Comment 2: {comment2}")
+        print(f"   Redditor Comment 2: {comment2}")
 
     print("\nTOP 5 HIGHEST SIMILARITY CASES (Most semantically similar answers)")
     print("-" * 60)
@@ -890,9 +933,9 @@ def display_edge_scenario_similarities(
 
         print(f"\n{i}. Similarity: {similarity:.4f}")
         print(f"   Scenario 1 (ID: {scenario1['submission_id']}): {title1}")
-        print(f"   Human Comment 1: {comment1}")
+        print(f"   Redditor Comment 1: {comment1}")
         print(f"   Scenario 2 (ID: {scenario2['submission_id']}): {title2}")
-        print(f"   Human Comment 2: {comment2}")
+        print(f"   Redditor Comment 2: {comment2}")
 
     print("\n🤖 LLM RESPONSES")
     print("=" * 60)
@@ -1029,13 +1072,13 @@ def analyze_reason_similarities(
         available_reasons = []
         actor_embeddings = {}
 
-        if actor == "human":
+        if actor == "redditor":
             if "top_comment_embedding" in embeddings_dict:
                 available_reasons.append("top_comment")
                 actor_embeddings["top_comment"] = embeddings_dict[
                     "top_comment_embedding"
                 ]
-                # For human actor, reason consistency is 1.0 (perfect consistency since only one comment per scenario)
+                # For redditor actor, reason consistency is 1.0 (perfect consistency since only one comment per scenario)
                 reason_similarities[actor] = {
                     "similarities": np.array([1.0]),
                     "mean_similarity": 1.0,
@@ -1102,7 +1145,7 @@ def compute_global_reason_similarity_bounds(
 
     for language_code, reason_similarities in all_reason_similarities.items():
         for actor, data in reason_similarities.items():
-            if actor != "human":
+            if actor != "redditor":
                 similarities = data["similarities"]
                 all_similarities.extend(similarities)
 
@@ -1132,44 +1175,34 @@ def plot_reason_similarity_comparison(
     """
 
     filtered_reason_similarities = {
-        k: v for k, v in reason_similarities.items() if k != "human"
+        k: v for k, v in reason_similarities.items() if k != "redditor"
     }
     actor_names = list(filtered_reason_similarities.keys())
     n_actors = len(actor_names)
 
-    height_ratios = [3] + [2.5] * n_actors
+    height_ratios = [2.5] * n_actors + [3]
 
-    _, axes = plt.subplots(
+    fig, axes = plt.subplots(
         n_actors + 1,
         1,
         figsize=(12, 2.5 * n_actors + 3),
         gridspec_kw={"height_ratios": height_ratios},
     )
 
-    if n_actors == 1:
-        axes = [axes[0], axes[1], axes[2]]
-
-    ax_box = axes[0]
-
-    similarities_data = [
-        data["similarities"] for data in filtered_reason_similarities.values()
-    ]
-    actor_names = list(filtered_reason_similarities.keys())
-
-    box_plot = ax_box.boxplot(
-        similarities_data, tick_labels=actor_names, patch_artist=True
+    plt.suptitle(
+        f"Reason-wise Similarity Distributions ({language_code.upper()})",
+        fontsize=16,
+        fontweight="bold",
+        y=0.995,
     )
 
-    for patch in box_plot["boxes"]:
-        patch.set_facecolor(get_language_color(language_code))
-        patch.set_alpha(0.8)
-    ax_box.set_title(f"Reason-wise Similarity Comparison ({language_code.upper()})")
-    ax_box.grid(True, alpha=0.3)
+    if n_actors == 1:
+        axes = [axes[0], axes[1], axes[2]]
 
     for i, (actor, data) in enumerate(
         tqdm(filtered_reason_similarities.items(), desc="Plotting reason similarities")
     ):
-        ax = axes[i + 1]
+        ax = axes[i]
         ax.hist(
             data["similarities"],
             bins=30,
@@ -1202,7 +1235,23 @@ def plot_reason_similarity_comparison(
             ax.set_xlim(0, 1)
         ax.legend()
 
-    plt.tight_layout()
+    ax_box = axes[-1]
+
+    similarities_data = [
+        data["similarities"] for data in filtered_reason_similarities.values()
+    ]
+    actor_names_upper = [name.upper() for name in actor_names]
+
+    box_plot = ax_box.boxplot(
+        similarities_data, tick_labels=actor_names_upper, patch_artist=True
+    )
+
+    for patch in box_plot["boxes"]:
+        patch.set_facecolor(get_language_color(language_code))
+        patch.set_alpha(0.8)
+    ax_box.grid(True, alpha=0.3)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.99])
     plt.show()
 
 
