@@ -7,7 +7,6 @@ between different LLM models and humans across multiple languages.
 
 # %%
 import pandas as pd
-from scipy import stats
 from statsmodels.formula.api import ols  # type: ignore
 from statsmodels.stats.anova import anova_lm  # type: ignore
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
@@ -30,39 +29,8 @@ language_codes = ["Base", "Portuguese", "German", "Spanish", "French"]
 
 # %%
 df_anova = extract_llm_human_similarities_for_anova(all_embeddings, language_codes)
-df_anova = df_anova[
-    ~df_anova["actor1"].isin(["gemini", "bison"])
-]  # Remove Gemini and Bison from analysis
-
-# %%
 output_file = "../results/anova_data.csv"
 df_anova.to_csv(output_file, index=False)
-
-# %%
-print("\n=== DESCRIPTIVE STATISTICS ===")
-print("\nBy Actor (LLM + reasoning type):")
-print(df_anova.groupby("actor1")["similarity"].describe())
-
-print("\nBy Language:")
-print(df_anova.groupby("language")["similarity"].describe())
-
-# # %%
-# print("\n=== ONE-WAY ANOVA: Comparing Actors ===")
-# actor_model = ols("similarity ~ C(actor1)", data=df_anova).fit()
-# actor_anova_table = anova_lm(actor_model, typ=2)
-# print(actor_anova_table)
-
-# # %%
-# print("\n=== ONE-WAY ANOVA: Comparing Languages ===")
-# language_model = ols("similarity ~ C(language)", data=df_anova).fit()
-# language_anova_table = anova_lm(language_model, typ=2)
-# print(language_anova_table)
-
-# %%
-print("\n=== TWO-WAY ANOVA: Actor × Language ===")
-model = ols("similarity ~ C(actor1) * C(language)", data=df_anova).fit()
-anova_table = anova_lm(model, typ=2)
-print(anova_table)
 
 # %%
 print("\n=== POST-HOC TEST: Tukey's HSD ===")
@@ -88,5 +56,35 @@ print(
         ["group1", "group2", "meandiff", "p-adj", "lower", "upper", "reject"]
     ].to_string(index=False)
 )
+
+# %%
+print("\n=== DESCRIPTIVE STATISTICS ===")
+print("\nBy Actor (LLM + reasoning type):")
+print(df_anova.groupby("actor1")["similarity"].describe())
+
+print("\nBy Language:")
+print(df_anova.groupby("language")["similarity"].describe())
+
+# # %%
+# print("\n=== ONE-WAY ANOVA: Comparing Actors ===")
+# actor_model = ols("similarity ~ C(actor1)", data=df_anova).fit()
+# actor_anova_table = anova_lm(actor_model, typ=2)
+# print(actor_anova_table)
+
+# # %%
+# print("\n=== ONE-WAY ANOVA: Comparing Languages ===")
+# language_model = ols("similarity ~ C(language)", data=df_anova).fit()
+# language_anova_table = anova_lm(language_model, typ=2)
+# print(language_anova_table)
+
+# %%
+df_anova = df_anova[
+    ~df_anova["actor1"].isin(["gemini", "bison"])
+]  # Remove Gemini and Bison from analysis
+
+print("\n=== TWO-WAY ANOVA: Actor × Language ===")
+model = ols("similarity ~ C(actor1) * C(language)", data=df_anova).fit()
+anova_table = anova_lm(model, typ=2)
+print(anova_table)
 
 # %%
