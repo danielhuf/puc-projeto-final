@@ -38,7 +38,7 @@
   {
     "group1":"bison_Base",
     "group2":"llama_Base",
-    "meandiff":-0.048,
+    "meandiff":-0.0479,
     "p-adj":0.0,
     "lower":-0.0535,
     "upper":-0.0424,
@@ -59,7 +59,7 @@
     "meandiff":0.0226,
     "p-adj":0.0,
     "lower":0.0078,
-    "upper":0.0375,
+    "upper":0.0374,
     "reject":true
   },
   {
@@ -67,7 +67,7 @@
     "group2":"claude_German",
     "meandiff":-0.1352,
     "p-adj":0.0,
-    "lower":-0.1501,
+    "lower":-0.1502,
     "upper":-0.1202,
     "reject":true
   },
@@ -83,7 +83,7 @@
   {
     "group1":"claude_Base",
     "group2":"claude_Spanish",
-    "meandiff":0.0828,
+    "meandiff":0.0827,
     "p-adj":0.0,
     "lower":0.0541,
     "upper":0.1114,
@@ -95,7 +95,7 @@
     "meandiff":-0.0303,
     "p-adj":0.0,
     "lower":-0.0349,
-    "upper":-0.0256,
+    "upper":-0.0257,
     "reject":true
   },
   {
@@ -103,7 +103,7 @@
     "group2":"gpt3.5_Base",
     "meandiff":-0.0128,
     "p-adj":0.0,
-    "lower":-0.018,
+    "lower":-0.0181,
     "upper":-0.0075,
     "reject":true
   },
@@ -113,7 +113,7 @@
     "meandiff":0.0079,
     "p-adj":0.0,
     "lower":0.0018,
-    "upper":0.0141,
+    "upper":0.014,
     "reject":true
   },
   {
@@ -695,7 +695,7 @@
   {
     "group1":"gemma_Base",
     "group2":"llama_Base",
-    "meandiff":0.006,
+    "meandiff":0.0061,
     "p-adj":0.0,
     "lower":0.0015,
     "upper":0.0106,
@@ -707,7 +707,7 @@
     "meandiff":-0.0136,
     "p-adj":0.0,
     "lower":-0.0183,
-    "upper":-0.009,
+    "upper":-0.0089,
     "reject":true
   },
   {
@@ -912,7 +912,7 @@
     "group1":"gpt3.5_Base",
     "group2":"gpt3.5_French",
     "meandiff":0.0161,
-    "p-adj":0.0013,
+    "p-adj":0.0014,
     "lower":0.001,
     "upper":0.0311,
     "reject":true
@@ -920,10 +920,10 @@
   {
     "group1":"gpt3.5_Base",
     "group2":"gpt3.5_German",
-    "meandiff":-0.1146,
+    "meandiff":-0.1147,
     "p-adj":0.0,
-    "lower":-0.1295,
-    "upper":-0.0997,
+    "lower":-0.1296,
+    "upper":-0.0998,
     "reject":true
   },
   {
@@ -958,7 +958,7 @@
     "group2":"llama_Base",
     "meandiff":-0.0114,
     "p-adj":0.0,
-    "lower":-0.0167,
+    "lower":-0.0166,
     "upper":-0.0062,
     "reject":true
   },
@@ -1172,10 +1172,10 @@
   {
     "group1":"gpt4_Base",
     "group2":"llama_Base",
-    "meandiff":-0.0322,
+    "meandiff":-0.0321,
     "p-adj":0.0,
-    "lower":-0.0383,
-    "upper":-0.0261,
+    "lower":-0.0382,
+    "upper":-0.026,
     "reject":true
   },
   {
@@ -1316,7 +1316,7 @@
   {
     "group1":"llama_Base",
     "group2":"llama_French",
-    "meandiff":-0.3385,
+    "meandiff":-0.3386,
     "p-adj":0.0,
     "lower":-0.3554,
     "upper":-0.3217,
@@ -1327,7 +1327,7 @@
     "group2":"llama_German",
     "meandiff":-0.3841,
     "p-adj":0.0,
-    "lower":-0.3963,
+    "lower":-0.3964,
     "upper":-0.3719,
     "reject":true
   },
@@ -1337,7 +1337,7 @@
     "meandiff":-0.0662,
     "p-adj":0.0,
     "lower":-0.1033,
-    "upper":-0.029,
+    "upper":-0.0291,
     "reject":true
   },
   {
@@ -1460,7 +1460,7 @@
   {
     "group1":"mistral_Base",
     "group2":"mistral_German",
-    "meandiff":-0.2205,
+    "meandiff":-0.2206,
     "p-adj":0.0,
     "lower":-0.2398,
     "upper":-0.2013,
@@ -1469,8 +1469,8 @@
   {
     "group1":"mistral_Base",
     "group2":"mistral_Portuguese",
-    "meandiff":-0.0381,
-    "p-adj":0.0005,
+    "meandiff":-0.0382,
+    "p-adj":0.0004,
     "lower":-0.0722,
     "upper":-0.0041,
     "reject":true
@@ -1479,7 +1479,7 @@
     "group1":"mistral_Base",
     "group2":"mistral_Spanish",
     "meandiff":-0.0274,
-    "p-adj":0.9455,
+    "p-adj":0.9452,
     "lower":-0.0822,
     "upper":0.0274,
     "reject":false

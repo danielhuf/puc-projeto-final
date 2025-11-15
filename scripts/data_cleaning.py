@@ -23,6 +23,9 @@ def process_csv_data(input_file: str, output_file: str) -> None:
     mistral_columns = ["mistral_reason_1", "mistral_reason_2", "mistral_reason_3"]
     df_cleaned = df_cleaned.dropna(subset=mistral_columns)
 
+    # Remove rows with duplicate selftex
+    df_cleaned = df_cleaned.drop_duplicates(subset=["selftext"], keep="first")
+
     print(f"Final shape: {df_cleaned.shape}")
 
     output_path = Path(output_file)
