@@ -1,65 +1,11 @@
 [
   {
-    "group1":"bison_Base",
-    "group2":"claude_Base",
-    "meandiff":-0.0237,
-    "p-adj":0.0,
-    "lower":-0.0293,
-    "upper":-0.0181,
-    "reject":true
-  },
-  {
-    "group1":"bison_Base",
-    "group2":"gemma_Base",
-    "meandiff":-0.054,
-    "p-adj":0.0,
-    "lower":-0.0591,
-    "upper":-0.0489,
-    "reject":true
-  },
-  {
-    "group1":"bison_Base",
-    "group2":"gpt3.5_Base",
-    "meandiff":-0.0365,
-    "p-adj":0.0,
-    "lower":-0.0422,
-    "upper":-0.0309,
-    "reject":true
-  },
-  {
-    "group1":"bison_Base",
-    "group2":"gpt4_Base",
-    "meandiff":-0.0158,
-    "p-adj":0.0,
-    "lower":-0.0223,
-    "upper":-0.0093,
-    "reject":true
-  },
-  {
-    "group1":"bison_Base",
-    "group2":"llama_Base",
-    "meandiff":-0.0479,
-    "p-adj":0.0,
-    "lower":-0.0535,
-    "upper":-0.0424,
-    "reject":true
-  },
-  {
-    "group1":"bison_Base",
-    "group2":"mistral_Base",
-    "meandiff":-0.0676,
-    "p-adj":0.0,
-    "lower":-0.0732,
-    "upper":-0.062,
-    "reject":true
-  },
-  {
     "group1":"claude_Base",
     "group2":"claude_French",
     "meandiff":0.0226,
     "p-adj":0.0,
-    "lower":0.0078,
-    "upper":0.0374,
+    "lower":0.008,
+    "upper":0.0372,
     "reject":true
   },
   {
@@ -67,8 +13,8 @@
     "group2":"claude_German",
     "meandiff":-0.1352,
     "p-adj":0.0,
-    "lower":-0.1502,
-    "upper":-0.1202,
+    "lower":-0.1499,
+    "upper":-0.1205,
     "reject":true
   },
   {
@@ -76,8 +22,8 @@
     "group2":"claude_Portuguese",
     "meandiff":0.098,
     "p-adj":0.0,
-    "lower":0.0796,
-    "upper":0.1163,
+    "lower":0.0799,
+    "upper":0.116,
     "reject":true
   },
   {
@@ -85,8 +31,8 @@
     "group2":"claude_Spanish",
     "meandiff":0.0827,
     "p-adj":0.0,
-    "lower":0.0541,
-    "upper":0.1114,
+    "lower":0.0545,
+    "upper":0.1109,
     "reject":true
   },
   {
@@ -94,7 +40,7 @@
     "group2":"gemma_Base",
     "meandiff":-0.0303,
     "p-adj":0.0,
-    "lower":-0.0349,
+    "lower":-0.0348,
     "upper":-0.0257,
     "reject":true
   },
@@ -103,8 +49,8 @@
     "group2":"gpt3.5_Base",
     "meandiff":-0.0128,
     "p-adj":0.0,
-    "lower":-0.0181,
-    "upper":-0.0075,
+    "lower":-0.018,
+    "upper":-0.0076,
     "reject":true
   },
   {
@@ -112,7 +58,7 @@
     "group2":"gpt4_Base",
     "meandiff":0.0079,
     "p-adj":0.0,
-    "lower":0.0018,
+    "lower":0.0019,
     "upper":0.014,
     "reject":true
   },
@@ -121,8 +67,8 @@
     "group2":"llama_Base",
     "meandiff":-0.0242,
     "p-adj":0.0,
-    "lower":-0.0294,
-    "upper":-0.0191,
+    "lower":-0.0293,
+    "upper":-0.0192,
     "reject":true
   },
   {
@@ -130,7 +76,7 @@
     "group2":"mistral_Base",
     "meandiff":-0.0439,
     "p-adj":0.0,
-    "lower":-0.0491,
+    "lower":-0.049,
     "upper":-0.0387,
     "reject":true
   },
@@ -139,8 +85,8 @@
     "group2":"claude_German",
     "meandiff":-0.1578,
     "p-adj":0.0,
-    "lower":-0.1782,
-    "upper":-0.1375,
+    "lower":-0.1779,
+    "upper":-0.1378,
     "reject":true
   },
   {
@@ -148,8 +94,8 @@
     "group2":"claude_Portuguese",
     "meandiff":0.0753,
     "p-adj":0.0,
-    "lower":0.0524,
-    "upper":0.0983,
+    "lower":0.0528,
+    "upper":0.0979,
     "reject":true
   },
   {
@@ -157,44 +103,35 @@
     "group2":"claude_Spanish",
     "meandiff":0.0601,
     "p-adj":0.0,
-    "lower":0.0284,
-    "upper":0.0918,
+    "lower":0.0289,
+    "upper":0.0913,
     "reject":true
-  },
-  {
-    "group1":"claude_French",
-    "group2":"gemini_French",
-    "meandiff":-0.0153,
-    "p-adj":0.2265,
-    "lower":-0.0357,
-    "upper":0.0051,
-    "reject":false
   },
   {
     "group1":"claude_French",
     "group2":"gemma_French",
     "meandiff":-0.0772,
     "p-adj":0.0,
-    "lower":-0.0977,
-    "upper":-0.0566,
+    "lower":-0.0974,
+    "upper":-0.0569,
     "reject":true
   },
   {
     "group1":"claude_French",
     "group2":"gpt3.5_French",
     "meandiff":-0.0194,
-    "p-adj":0.0129,
-    "lower":-0.0398,
-    "upper":0.0011,
+    "p-adj":0.0097,
+    "lower":-0.0395,
+    "upper":0.0007,
     "reject":false
   },
   {
     "group1":"claude_French",
     "group2":"gpt4_French",
     "meandiff":-0.014,
-    "p-adj":0.4626,
-    "lower":-0.0346,
-    "upper":0.0067,
+    "p-adj":0.3922,
+    "lower":-0.0343,
+    "upper":0.0064,
     "reject":false
   },
   {
@@ -202,8 +139,8 @@
     "group2":"llama_French",
     "meandiff":-0.3854,
     "p-adj":0.0,
-    "lower":-0.4072,
-    "upper":-0.3636,
+    "lower":-0.4069,
+    "upper":-0.364,
     "reject":true
   },
   {
@@ -211,8 +148,8 @@
     "group2":"mistral_French",
     "meandiff":-0.1876,
     "p-adj":0.0,
-    "lower":-0.2178,
-    "upper":-0.1574,
+    "lower":-0.2174,
+    "upper":-0.1579,
     "reject":true
   },
   {
@@ -220,8 +157,8 @@
     "group2":"claude_Portuguese",
     "meandiff":0.2331,
     "p-adj":0.0,
-    "lower":0.2101,
-    "upper":0.2562,
+    "lower":0.2105,
+    "upper":0.2558,
     "reject":true
   },
   {
@@ -229,35 +166,26 @@
     "group2":"claude_Spanish",
     "meandiff":0.2179,
     "p-adj":0.0,
-    "lower":0.1861,
-    "upper":0.2497,
+    "lower":0.1866,
+    "upper":0.2492,
     "reject":true
-  },
-  {
-    "group1":"claude_German",
-    "group2":"gemini_German",
-    "meandiff":-0.0073,
-    "p-adj":0.9999,
-    "lower":-0.0277,
-    "upper":0.013,
-    "reject":false
   },
   {
     "group1":"claude_German",
     "group2":"gemma_German",
     "meandiff":-0.0283,
     "p-adj":0.0,
-    "lower":-0.0479,
-    "upper":-0.0087,
+    "lower":-0.0476,
+    "upper":-0.009,
     "reject":true
   },
   {
     "group1":"claude_German",
     "group2":"gpt3.5_German",
     "meandiff":0.0077,
-    "p-adj":0.9996,
-    "lower":-0.0127,
-    "upper":0.0282,
+    "p-adj":0.9985,
+    "lower":-0.0124,
+    "upper":0.0279,
     "reject":false
   },
   {
@@ -265,8 +193,8 @@
     "group2":"gpt4_German",
     "meandiff":-0.0007,
     "p-adj":1.0,
-    "lower":-0.0213,
-    "upper":0.0199,
+    "lower":-0.021,
+    "upper":0.0196,
     "reject":false
   },
   {
@@ -274,8 +202,8 @@
     "group2":"llama_German",
     "meandiff":-0.2731,
     "p-adj":0.0,
-    "lower":-0.2917,
-    "upper":-0.2545,
+    "lower":-0.2915,
+    "upper":-0.2548,
     "reject":true
   },
   {
@@ -283,26 +211,17 @@
     "group2":"mistral_German",
     "meandiff":-0.1293,
     "p-adj":0.0,
-    "lower":-0.153,
-    "upper":-0.1055,
+    "lower":-0.1527,
+    "upper":-0.1059,
     "reject":true
   },
   {
     "group1":"claude_Portuguese",
     "group2":"claude_Spanish",
     "meandiff":-0.0152,
-    "p-adj":0.9869,
-    "lower":-0.0487,
-    "upper":0.0182,
-    "reject":false
-  },
-  {
-    "group1":"claude_Portuguese",
-    "group2":"gemini_Portuguese",
-    "meandiff":-0.0136,
-    "p-adj":0.9001,
-    "lower":-0.0389,
-    "upper":0.0116,
+    "p-adj":0.9731,
+    "lower":-0.0481,
+    "upper":0.0177,
     "reject":false
   },
   {
@@ -310,8 +229,8 @@
     "group2":"gemma_Portuguese",
     "meandiff":-0.0995,
     "p-adj":0.0,
-    "lower":-0.1234,
-    "upper":-0.0755,
+    "lower":-0.123,
+    "upper":-0.0759,
     "reject":true
   },
   {
@@ -319,8 +238,8 @@
     "group2":"gpt3.5_Portuguese",
     "meandiff":-0.0078,
     "p-adj":1.0,
-    "lower":-0.0326,
-    "upper":0.017,
+    "lower":-0.0322,
+    "upper":0.0167,
     "reject":false
   },
   {
@@ -328,8 +247,8 @@
     "group2":"gpt4_Portuguese",
     "meandiff":-0.0056,
     "p-adj":1.0,
-    "lower":-0.0304,
-    "upper":0.0193,
+    "lower":-0.0301,
+    "upper":0.0189,
     "reject":false
   },
   {
@@ -337,8 +256,8 @@
     "group2":"llama_Portuguese",
     "meandiff":-0.1883,
     "p-adj":0.0,
-    "lower":-0.2293,
-    "upper":-0.1474,
+    "lower":-0.2287,
+    "upper":-0.148,
     "reject":true
   },
   {
@@ -346,26 +265,17 @@
     "group2":"mistral_Portuguese",
     "meandiff":-0.18,
     "p-adj":0.0,
-    "lower":-0.2183,
-    "upper":-0.1418,
+    "lower":-0.2177,
+    "upper":-0.1423,
     "reject":true
-  },
-  {
-    "group1":"claude_Spanish",
-    "group2":"gemini_Spanish",
-    "meandiff":-0.017,
-    "p-adj":0.9937,
-    "lower":-0.0561,
-    "upper":0.0221,
-    "reject":false
   },
   {
     "group1":"claude_Spanish",
     "group2":"gemma_Spanish",
     "meandiff":-0.1032,
     "p-adj":0.0,
-    "lower":-0.1439,
-    "upper":-0.0625,
+    "lower":-0.1433,
+    "upper":-0.0631,
     "reject":true
   },
   {
@@ -373,8 +283,8 @@
     "group2":"gpt3.5_Spanish",
     "meandiff":-0.002,
     "p-adj":1.0,
-    "lower":-0.042,
-    "upper":0.0379,
+    "lower":-0.0413,
+    "upper":0.0373,
     "reject":false
   },
   {
@@ -382,8 +292,8 @@
     "group2":"gpt4_Spanish",
     "meandiff":-0.0124,
     "p-adj":1.0,
-    "lower":-0.0523,
-    "upper":0.0275,
+    "lower":-0.0517,
+    "upper":0.0269,
     "reject":false
   },
   {
@@ -391,8 +301,8 @@
     "group2":"llama_Spanish",
     "meandiff":-0.3234,
     "p-adj":0.0,
-    "lower":-0.3907,
-    "upper":-0.2561,
+    "lower":-0.3896,
+    "upper":-0.2572,
     "reject":true
   },
   {
@@ -400,242 +310,8 @@
     "group2":"mistral_Spanish",
     "meandiff":-0.1541,
     "p-adj":0.0,
-    "lower":-0.2153,
-    "upper":-0.0928,
-    "reject":true
-  },
-  {
-    "group1":"gemini_French",
-    "group2":"gemini_German",
-    "meandiff":-0.1498,
-    "p-adj":0.0,
-    "lower":-0.1702,
-    "upper":-0.1295,
-    "reject":true
-  },
-  {
-    "group1":"gemini_French",
-    "group2":"gemini_Portuguese",
-    "meandiff":0.077,
-    "p-adj":0.0,
-    "lower":0.054,
-    "upper":0.1,
-    "reject":true
-  },
-  {
-    "group1":"gemini_French",
-    "group2":"gemini_Spanish",
-    "meandiff":0.0584,
-    "p-adj":0.0,
-    "lower":0.0276,
-    "upper":0.0893,
-    "reject":true
-  },
-  {
-    "group1":"gemini_French",
-    "group2":"gemma_French",
-    "meandiff":-0.0619,
-    "p-adj":0.0,
-    "lower":-0.0826,
-    "upper":-0.0412,
-    "reject":true
-  },
-  {
-    "group1":"gemini_French",
-    "group2":"gpt3.5_French",
-    "meandiff":-0.0041,
-    "p-adj":1.0,
-    "lower":-0.0246,
-    "upper":0.0165,
-    "reject":false
-  },
-  {
-    "group1":"gemini_French",
-    "group2":"gpt4_French",
-    "meandiff":0.0013,
-    "p-adj":1.0,
-    "lower":-0.0194,
-    "upper":0.0221,
-    "reject":false
-  },
-  {
-    "group1":"gemini_French",
-    "group2":"llama_French",
-    "meandiff":-0.3701,
-    "p-adj":0.0,
-    "lower":-0.392,
-    "upper":-0.3482,
-    "reject":true
-  },
-  {
-    "group1":"gemini_French",
-    "group2":"mistral_French",
-    "meandiff":-0.1723,
-    "p-adj":0.0,
-    "lower":-0.2026,
-    "upper":-0.142,
-    "reject":true
-  },
-  {
-    "group1":"gemini_German",
-    "group2":"gemini_Portuguese",
-    "meandiff":0.2268,
-    "p-adj":0.0,
-    "lower":0.204,
-    "upper":0.2497,
-    "reject":true
-  },
-  {
-    "group1":"gemini_German",
-    "group2":"gemini_Spanish",
-    "meandiff":0.2083,
-    "p-adj":0.0,
-    "lower":0.1775,
-    "upper":0.239,
-    "reject":true
-  },
-  {
-    "group1":"gemini_German",
-    "group2":"gemma_German",
-    "meandiff":-0.021,
-    "p-adj":0.001,
-    "lower":-0.0404,
-    "upper":-0.0016,
-    "reject":true
-  },
-  {
-    "group1":"gemini_German",
-    "group2":"gpt3.5_German",
-    "meandiff":0.0151,
-    "p-adj":0.2505,
-    "lower":-0.0052,
-    "upper":0.0353,
-    "reject":false
-  },
-  {
-    "group1":"gemini_German",
-    "group2":"gpt4_German",
-    "meandiff":0.0066,
-    "p-adj":1.0,
-    "lower":-0.0139,
-    "upper":0.027,
-    "reject":false
-  },
-  {
-    "group1":"gemini_German",
-    "group2":"llama_German",
-    "meandiff":-0.2658,
-    "p-adj":0.0,
-    "lower":-0.2843,
-    "upper":-0.2474,
-    "reject":true
-  },
-  {
-    "group1":"gemini_German",
-    "group2":"mistral_German",
-    "meandiff":-0.122,
-    "p-adj":0.0,
-    "lower":-0.1456,
-    "upper":-0.0983,
-    "reject":true
-  },
-  {
-    "group1":"gemini_Portuguese",
-    "group2":"gemini_Spanish",
-    "meandiff":-0.0186,
-    "p-adj":0.8118,
-    "lower":-0.0511,
-    "upper":0.0139,
-    "reject":false
-  },
-  {
-    "group1":"gemini_Portuguese",
-    "group2":"gemma_Portuguese",
-    "meandiff":-0.0859,
-    "p-adj":0.0,
-    "lower":-0.1097,
-    "upper":-0.062,
-    "reject":true
-  },
-  {
-    "group1":"gemini_Portuguese",
-    "group2":"gpt3.5_Portuguese",
-    "meandiff":0.0058,
-    "p-adj":1.0,
-    "lower":-0.0189,
-    "upper":0.0306,
-    "reject":false
-  },
-  {
-    "group1":"gemini_Portuguese",
-    "group2":"gpt4_Portuguese",
-    "meandiff":0.008,
-    "p-adj":1.0,
-    "lower":-0.0168,
-    "upper":0.0328,
-    "reject":false
-  },
-  {
-    "group1":"gemini_Portuguese",
-    "group2":"llama_Portuguese",
-    "meandiff":-0.1747,
-    "p-adj":0.0,
-    "lower":-0.2157,
-    "upper":-0.1338,
-    "reject":true
-  },
-  {
-    "group1":"gemini_Portuguese",
-    "group2":"mistral_Portuguese",
-    "meandiff":-0.1664,
-    "p-adj":0.0,
-    "lower":-0.2046,
-    "upper":-0.1282,
-    "reject":true
-  },
-  {
-    "group1":"gemini_Spanish",
-    "group2":"gemma_Spanish",
-    "meandiff":-0.0862,
-    "p-adj":0.0,
-    "lower":-0.1262,
-    "upper":-0.0462,
-    "reject":true
-  },
-  {
-    "group1":"gemini_Spanish",
-    "group2":"gpt3.5_Spanish",
-    "meandiff":0.015,
-    "p-adj":0.9994,
-    "lower":-0.0242,
-    "upper":0.0542,
-    "reject":false
-  },
-  {
-    "group1":"gemini_Spanish",
-    "group2":"gpt4_Spanish",
-    "meandiff":0.0046,
-    "p-adj":1.0,
-    "lower":-0.0346,
-    "upper":0.0438,
-    "reject":false
-  },
-  {
-    "group1":"gemini_Spanish",
-    "group2":"llama_Spanish",
-    "meandiff":-0.3064,
-    "p-adj":0.0,
-    "lower":-0.3733,
-    "upper":-0.2396,
-    "reject":true
-  },
-  {
-    "group1":"gemini_Spanish",
-    "group2":"mistral_Spanish",
-    "meandiff":-0.1371,
-    "p-adj":0.0,
-    "lower":-0.1979,
-    "upper":-0.0763,
+    "lower":-0.2144,
+    "upper":-0.0938,
     "reject":true
   },
   {
@@ -643,8 +319,8 @@
     "group2":"gemma_French",
     "meandiff":-0.0243,
     "p-adj":0.0,
-    "lower":-0.0393,
-    "upper":-0.0092,
+    "lower":-0.0391,
+    "upper":-0.0094,
     "reject":true
   },
   {
@@ -652,8 +328,8 @@
     "group2":"gemma_German",
     "meandiff":-0.1332,
     "p-adj":0.0,
-    "lower":-0.1467,
-    "upper":-0.1197,
+    "lower":-0.1465,
+    "upper":-0.1199,
     "reject":true
   },
   {
@@ -661,17 +337,17 @@
     "group2":"gemma_Portuguese",
     "meandiff":0.0288,
     "p-adj":0.0,
-    "lower":0.0126,
-    "upper":0.0449,
+    "lower":0.0128,
+    "upper":0.0447,
     "reject":true
   },
   {
     "group1":"gemma_Base",
     "group2":"gemma_Spanish",
     "meandiff":0.0098,
-    "p-adj":1.0,
-    "lower":-0.02,
-    "upper":0.0396,
+    "p-adj":0.9998,
+    "lower":-0.0195,
+    "upper":0.0392,
     "reject":false
   },
   {
@@ -679,8 +355,8 @@
     "group2":"gpt3.5_Base",
     "meandiff":0.0175,
     "p-adj":0.0,
-    "lower":0.0128,
-    "upper":0.0222,
+    "lower":0.0129,
+    "upper":0.0221,
     "reject":true
   },
   {
@@ -688,8 +364,8 @@
     "group2":"gpt4_Base",
     "meandiff":0.0382,
     "p-adj":0.0,
-    "lower":0.0325,
-    "upper":0.0439,
+    "lower":0.0326,
+    "upper":0.0438,
     "reject":true
   },
   {
@@ -706,8 +382,8 @@
     "group2":"mistral_Base",
     "meandiff":-0.0136,
     "p-adj":0.0,
-    "lower":-0.0183,
-    "upper":-0.0089,
+    "lower":-0.0182,
+    "upper":-0.009,
     "reject":true
   },
   {
@@ -715,8 +391,8 @@
     "group2":"gemma_German",
     "meandiff":-0.109,
     "p-adj":0.0,
-    "lower":-0.1288,
-    "upper":-0.0892,
+    "lower":-0.1285,
+    "upper":-0.0895,
     "reject":true
   },
   {
@@ -724,17 +400,17 @@
     "group2":"gemma_Portuguese",
     "meandiff":0.053,
     "p-adj":0.0,
-    "lower":0.0313,
-    "upper":0.0747,
+    "lower":0.0316,
+    "upper":0.0744,
     "reject":true
   },
   {
     "group1":"gemma_French",
     "group2":"gemma_Spanish",
     "meandiff":0.0341,
-    "p-adj":0.0028,
-    "lower":0.001,
-    "upper":0.0671,
+    "p-adj":0.0021,
+    "lower":0.0015,
+    "upper":0.0666,
     "reject":true
   },
   {
@@ -742,8 +418,8 @@
     "group2":"gpt3.5_French",
     "meandiff":0.0578,
     "p-adj":0.0,
-    "lower":0.0371,
-    "upper":0.0785,
+    "lower":0.0374,
+    "upper":0.0782,
     "reject":true
   },
   {
@@ -751,8 +427,8 @@
     "group2":"gpt4_French",
     "meandiff":0.0632,
     "p-adj":0.0,
-    "lower":0.0422,
-    "upper":0.0842,
+    "lower":0.0426,
+    "upper":0.0838,
     "reject":true
   },
   {
@@ -760,8 +436,8 @@
     "group2":"llama_French",
     "meandiff":-0.3083,
     "p-adj":0.0,
-    "lower":-0.3303,
-    "upper":-0.2862,
+    "lower":-0.33,
+    "upper":-0.2865,
     "reject":true
   },
   {
@@ -769,8 +445,8 @@
     "group2":"mistral_French",
     "meandiff":-0.1105,
     "p-adj":0.0,
-    "lower":-0.1409,
-    "upper":-0.08,
+    "lower":-0.1404,
+    "upper":-0.0805,
     "reject":true
   },
   {
@@ -778,8 +454,8 @@
     "group2":"gemma_Portuguese",
     "meandiff":0.162,
     "p-adj":0.0,
-    "lower":0.1413,
-    "upper":0.1826,
+    "lower":0.1417,
+    "upper":0.1823,
     "reject":true
   },
   {
@@ -787,8 +463,8 @@
     "group2":"gemma_Spanish",
     "meandiff":0.143,
     "p-adj":0.0,
-    "lower":0.1106,
-    "upper":0.1754,
+    "lower":0.1111,
+    "upper":0.1749,
     "reject":true
   },
   {
@@ -796,8 +472,8 @@
     "group2":"gpt3.5_German",
     "meandiff":0.036,
     "p-adj":0.0,
-    "lower":0.0165,
-    "upper":0.0555,
+    "lower":0.0168,
+    "upper":0.0553,
     "reject":true
   },
   {
@@ -805,8 +481,8 @@
     "group2":"gpt4_German",
     "meandiff":0.0276,
     "p-adj":0.0,
-    "lower":0.0079,
-    "upper":0.0473,
+    "lower":0.0082,
+    "upper":0.047,
     "reject":true
   },
   {
@@ -814,8 +490,8 @@
     "group2":"llama_German",
     "meandiff":-0.2448,
     "p-adj":0.0,
-    "lower":-0.2624,
-    "upper":-0.2272,
+    "lower":-0.2622,
+    "upper":-0.2275,
     "reject":true
   },
   {
@@ -823,17 +499,17 @@
     "group2":"mistral_German",
     "meandiff":-0.101,
     "p-adj":0.0,
-    "lower":-0.124,
-    "upper":-0.078,
+    "lower":-0.1236,
+    "upper":-0.0783,
     "reject":true
   },
   {
     "group1":"gemma_Portuguese",
     "group2":"gemma_Spanish",
     "meandiff":-0.0189,
-    "p-adj":0.8265,
-    "lower":-0.0525,
-    "upper":0.0146,
+    "p-adj":0.7628,
+    "lower":-0.052,
+    "upper":0.0141,
     "reject":false
   },
   {
@@ -841,8 +517,8 @@
     "group2":"gpt3.5_Portuguese",
     "meandiff":0.0917,
     "p-adj":0.0,
-    "lower":0.0683,
-    "upper":0.1151,
+    "lower":0.0686,
+    "upper":0.1147,
     "reject":true
   },
   {
@@ -850,8 +526,8 @@
     "group2":"gpt4_Portuguese",
     "meandiff":0.0939,
     "p-adj":0.0,
-    "lower":0.0704,
-    "upper":0.1173,
+    "lower":0.0708,
+    "upper":0.117,
     "reject":true
   },
   {
@@ -859,8 +535,8 @@
     "group2":"llama_Portuguese",
     "meandiff":-0.0889,
     "p-adj":0.0,
-    "lower":-0.129,
-    "upper":-0.0487,
+    "lower":-0.1284,
+    "upper":-0.0493,
     "reject":true
   },
   {
@@ -868,8 +544,8 @@
     "group2":"mistral_Portuguese",
     "meandiff":-0.0805,
     "p-adj":0.0,
-    "lower":-0.1179,
-    "upper":-0.0432,
+    "lower":-0.1173,
+    "upper":-0.0437,
     "reject":true
   },
   {
@@ -877,8 +553,8 @@
     "group2":"gpt3.5_Spanish",
     "meandiff":0.1012,
     "p-adj":0.0,
-    "lower":0.0603,
-    "upper":0.142,
+    "lower":0.061,
+    "upper":0.1414,
     "reject":true
   },
   {
@@ -886,8 +562,8 @@
     "group2":"gpt4_Spanish",
     "meandiff":0.0908,
     "p-adj":0.0,
-    "lower":0.05,
-    "upper":0.1316,
+    "lower":0.0506,
+    "upper":0.131,
     "reject":true
   },
   {
@@ -895,26 +571,26 @@
     "group2":"llama_Spanish",
     "meandiff":-0.2202,
     "p-adj":0.0,
-    "lower":-0.288,
-    "upper":-0.1524,
+    "lower":-0.2869,
+    "upper":-0.1535,
     "reject":true
   },
   {
     "group1":"gemma_Spanish",
     "group2":"mistral_Spanish",
     "meandiff":-0.0509,
-    "p-adj":0.0886,
-    "lower":-0.1127,
-    "upper":0.011,
+    "p-adj":0.0695,
+    "lower":-0.1117,
+    "upper":0.01,
     "reject":false
   },
   {
     "group1":"gpt3.5_Base",
     "group2":"gpt3.5_French",
     "meandiff":0.0161,
-    "p-adj":0.0014,
-    "lower":0.001,
-    "upper":0.0311,
+    "p-adj":0.001,
+    "lower":0.0012,
+    "upper":0.0309,
     "reject":true
   },
   {
@@ -922,8 +598,8 @@
     "group2":"gpt3.5_German",
     "meandiff":-0.1147,
     "p-adj":0.0,
-    "lower":-0.1296,
-    "upper":-0.0998,
+    "lower":-0.1293,
+    "upper":-0.1,
     "reject":true
   },
   {
@@ -931,8 +607,8 @@
     "group2":"gpt3.5_Portuguese",
     "meandiff":0.103,
     "p-adj":0.0,
-    "lower":0.0853,
-    "upper":0.1206,
+    "lower":0.0856,
+    "upper":0.1204,
     "reject":true
   },
   {
@@ -940,8 +616,8 @@
     "group2":"gpt3.5_Spanish",
     "meandiff":0.0935,
     "p-adj":0.0,
-    "lower":0.0647,
-    "upper":0.1224,
+    "lower":0.0651,
+    "upper":0.1219,
     "reject":true
   },
   {
@@ -949,8 +625,8 @@
     "group2":"gpt4_Base",
     "meandiff":0.0207,
     "p-adj":0.0,
-    "lower":0.0145,
-    "upper":0.0269,
+    "lower":0.0146,
+    "upper":0.0268,
     "reject":true
   },
   {
@@ -959,7 +635,7 @@
     "meandiff":-0.0114,
     "p-adj":0.0,
     "lower":-0.0166,
-    "upper":-0.0062,
+    "upper":-0.0063,
     "reject":true
   },
   {
@@ -967,8 +643,8 @@
     "group2":"mistral_Base",
     "meandiff":-0.0311,
     "p-adj":0.0,
-    "lower":-0.0364,
-    "upper":-0.0258,
+    "lower":-0.0363,
+    "upper":-0.0259,
     "reject":true
   },
   {
@@ -976,8 +652,8 @@
     "group2":"gpt3.5_German",
     "meandiff":-0.1307,
     "p-adj":0.0,
-    "lower":-0.1512,
-    "upper":-0.1103,
+    "lower":-0.1509,
+    "upper":-0.1106,
     "reject":true
   },
   {
@@ -985,8 +661,8 @@
     "group2":"gpt3.5_Portuguese",
     "meandiff":0.0869,
     "p-adj":0.0,
-    "lower":0.0644,
-    "upper":0.1094,
+    "lower":0.0647,
+    "upper":0.1091,
     "reject":true
   },
   {
@@ -994,8 +670,8 @@
     "group2":"gpt3.5_Spanish",
     "meandiff":0.0775,
     "p-adj":0.0,
-    "lower":0.0455,
-    "upper":0.1094,
+    "lower":0.046,
+    "upper":0.1089,
     "reject":true
   },
   {
@@ -1003,8 +679,8 @@
     "group2":"gpt4_French",
     "meandiff":0.0054,
     "p-adj":1.0,
-    "lower":-0.0154,
-    "upper":0.0262,
+    "lower":-0.0151,
+    "upper":0.0259,
     "reject":false
   },
   {
@@ -1012,8 +688,8 @@
     "group2":"llama_French",
     "meandiff":-0.3661,
     "p-adj":0.0,
-    "lower":-0.388,
-    "upper":-0.3441,
+    "lower":-0.3876,
+    "upper":-0.3445,
     "reject":true
   },
   {
@@ -1021,8 +697,8 @@
     "group2":"mistral_French",
     "meandiff":-0.1683,
     "p-adj":0.0,
-    "lower":-0.1986,
-    "upper":-0.1379,
+    "lower":-0.1981,
+    "upper":-0.1384,
     "reject":true
   },
   {
@@ -1030,8 +706,8 @@
     "group2":"gpt3.5_Portuguese",
     "meandiff":0.2176,
     "p-adj":0.0,
-    "lower":0.1952,
-    "upper":0.24,
+    "lower":0.1955,
+    "upper":0.2397,
     "reject":true
   },
   {
@@ -1039,17 +715,17 @@
     "group2":"gpt3.5_Spanish",
     "meandiff":0.2082,
     "p-adj":0.0,
-    "lower":0.1763,
-    "upper":0.2401,
+    "lower":0.1767,
+    "upper":0.2396,
     "reject":true
   },
   {
     "group1":"gpt3.5_German",
     "group2":"gpt4_German",
     "meandiff":-0.0085,
-    "p-adj":0.9979,
-    "lower":-0.029,
-    "upper":0.0121,
+    "p-adj":0.9942,
+    "lower":-0.0287,
+    "upper":0.0117,
     "reject":false
   },
   {
@@ -1057,8 +733,8 @@
     "group2":"llama_German",
     "meandiff":-0.2809,
     "p-adj":0.0,
-    "lower":-0.2994,
-    "upper":-0.2624,
+    "lower":-0.2991,
+    "upper":-0.2626,
     "reject":true
   },
   {
@@ -1066,8 +742,8 @@
     "group2":"mistral_German",
     "meandiff":-0.137,
     "p-adj":0.0,
-    "lower":-0.1607,
-    "upper":-0.1133,
+    "lower":-0.1604,
+    "upper":-0.1137,
     "reject":true
   },
   {
@@ -1075,8 +751,8 @@
     "group2":"gpt3.5_Spanish",
     "meandiff":-0.0095,
     "p-adj":1.0,
-    "lower":-0.0427,
-    "upper":0.0238,
+    "lower":-0.0422,
+    "upper":0.0233,
     "reject":false
   },
   {
@@ -1084,8 +760,8 @@
     "group2":"gpt4_Portuguese",
     "meandiff":0.0022,
     "p-adj":1.0,
-    "lower":-0.0222,
-    "upper":0.0265,
+    "lower":-0.0218,
+    "upper":0.0262,
     "reject":false
   },
   {
@@ -1093,8 +769,8 @@
     "group2":"llama_Portuguese",
     "meandiff":-0.1806,
     "p-adj":0.0,
-    "lower":-0.2213,
-    "upper":-0.1399,
+    "lower":-0.2206,
+    "upper":-0.1405,
     "reject":true
   },
   {
@@ -1102,8 +778,8 @@
     "group2":"mistral_Portuguese",
     "meandiff":-0.1722,
     "p-adj":0.0,
-    "lower":-0.2102,
-    "upper":-0.1343,
+    "lower":-0.2096,
+    "upper":-0.1349,
     "reject":true
   },
   {
@@ -1111,8 +787,8 @@
     "group2":"gpt4_Spanish",
     "meandiff":-0.0104,
     "p-adj":1.0,
-    "lower":-0.0504,
-    "upper":0.0297,
+    "lower":-0.0498,
+    "upper":0.0291,
     "reject":false
   },
   {
@@ -1120,8 +796,8 @@
     "group2":"llama_Spanish",
     "meandiff":-0.3214,
     "p-adj":0.0,
-    "lower":-0.3887,
-    "upper":-0.254,
+    "lower":-0.3877,
+    "upper":-0.2551,
     "reject":true
   },
   {
@@ -1129,8 +805,8 @@
     "group2":"mistral_Spanish",
     "meandiff":-0.152,
     "p-adj":0.0,
-    "lower":-0.2134,
-    "upper":-0.0907,
+    "lower":-0.2124,
+    "upper":-0.0917,
     "reject":true
   },
   {
@@ -1138,8 +814,8 @@
     "group2":"gpt4_French",
     "meandiff":0.0008,
     "p-adj":1.0,
-    "lower":-0.0149,
-    "upper":0.0164,
+    "lower":-0.0147,
+    "upper":0.0162,
     "reject":false
   },
   {
@@ -1147,8 +823,8 @@
     "group2":"gpt4_German",
     "meandiff":-0.1438,
     "p-adj":0.0,
-    "lower":-0.1593,
-    "upper":-0.1284,
+    "lower":-0.1591,
+    "upper":-0.1286,
     "reject":true
   },
   {
@@ -1156,8 +832,8 @@
     "group2":"gpt4_Portuguese",
     "meandiff":0.0844,
     "p-adj":0.0,
-    "lower":0.0665,
-    "upper":0.1024,
+    "lower":0.0667,
+    "upper":0.1022,
     "reject":true
   },
   {
@@ -1165,8 +841,8 @@
     "group2":"gpt4_Spanish",
     "meandiff":0.0624,
     "p-adj":0.0,
-    "lower":0.0335,
-    "upper":0.0914,
+    "lower":0.0339,
+    "upper":0.091,
     "reject":true
   },
   {
@@ -1174,8 +850,8 @@
     "group2":"llama_Base",
     "meandiff":-0.0321,
     "p-adj":0.0,
-    "lower":-0.0382,
-    "upper":-0.026,
+    "lower":-0.0381,
+    "upper":-0.0261,
     "reject":true
   },
   {
@@ -1183,7 +859,7 @@
     "group2":"mistral_Base",
     "meandiff":-0.0518,
     "p-adj":0.0,
-    "lower":-0.058,
+    "lower":-0.0579,
     "upper":-0.0457,
     "reject":true
   },
@@ -1192,8 +868,8 @@
     "group2":"gpt4_German",
     "meandiff":-0.1446,
     "p-adj":0.0,
-    "lower":-0.1655,
-    "upper":-0.1237,
+    "lower":-0.1651,
+    "upper":-0.124,
     "reject":true
   },
   {
@@ -1201,8 +877,8 @@
     "group2":"gpt4_Portuguese",
     "meandiff":0.0837,
     "p-adj":0.0,
-    "lower":0.0609,
-    "upper":0.1065,
+    "lower":0.0613,
+    "upper":0.1061,
     "reject":true
   },
   {
@@ -1210,8 +886,8 @@
     "group2":"gpt4_Spanish",
     "meandiff":0.0617,
     "p-adj":0.0,
-    "lower":0.0296,
-    "upper":0.0938,
+    "lower":0.0301,
+    "upper":0.0933,
     "reject":true
   },
   {
@@ -1219,8 +895,8 @@
     "group2":"llama_French",
     "meandiff":-0.3715,
     "p-adj":0.0,
-    "lower":-0.3936,
-    "upper":-0.3493,
+    "lower":-0.3933,
+    "upper":-0.3496,
     "reject":true
   },
   {
@@ -1228,8 +904,8 @@
     "group2":"mistral_French",
     "meandiff":-0.1737,
     "p-adj":0.0,
-    "lower":-0.2041,
-    "upper":-0.1432,
+    "lower":-0.2037,
+    "upper":-0.1437,
     "reject":true
   },
   {
@@ -1237,8 +913,8 @@
     "group2":"gpt4_Portuguese",
     "meandiff":0.2283,
     "p-adj":0.0,
-    "lower":0.2056,
-    "upper":0.2509,
+    "lower":0.206,
+    "upper":0.2506,
     "reject":true
   },
   {
@@ -1246,8 +922,8 @@
     "group2":"gpt4_Spanish",
     "meandiff":0.2063,
     "p-adj":0.0,
-    "lower":0.1743,
-    "upper":0.2383,
+    "lower":0.1748,
+    "upper":0.2378,
     "reject":true
   },
   {
@@ -1255,8 +931,8 @@
     "group2":"llama_German",
     "meandiff":-0.2724,
     "p-adj":0.0,
-    "lower":-0.2911,
-    "upper":-0.2537,
+    "lower":-0.2909,
+    "upper":-0.254,
     "reject":true
   },
   {
@@ -1264,17 +940,17 @@
     "group2":"mistral_German",
     "meandiff":-0.1285,
     "p-adj":0.0,
-    "lower":-0.1524,
-    "upper":-0.1047,
+    "lower":-0.152,
+    "upper":-0.105,
     "reject":true
   },
   {
     "group1":"gpt4_Portuguese",
     "group2":"gpt4_Spanish",
     "meandiff":-0.022,
-    "p-adj":0.4955,
-    "lower":-0.0552,
-    "upper":0.0112,
+    "p-adj":0.4238,
+    "lower":-0.0547,
+    "upper":0.0107,
     "reject":false
   },
   {
@@ -1282,8 +958,8 @@
     "group2":"llama_Portuguese",
     "meandiff":-0.1828,
     "p-adj":0.0,
-    "lower":-0.2235,
-    "upper":-0.1421,
+    "lower":-0.2228,
+    "upper":-0.1427,
     "reject":true
   },
   {
@@ -1291,8 +967,8 @@
     "group2":"mistral_Portuguese",
     "meandiff":-0.1744,
     "p-adj":0.0,
-    "lower":-0.2124,
-    "upper":-0.1365,
+    "lower":-0.2118,
+    "upper":-0.137,
     "reject":true
   },
   {
@@ -1300,8 +976,8 @@
     "group2":"llama_Spanish",
     "meandiff":-0.311,
     "p-adj":0.0,
-    "lower":-0.3783,
-    "upper":-0.2437,
+    "lower":-0.3773,
+    "upper":-0.2447,
     "reject":true
   },
   {
@@ -1309,8 +985,8 @@
     "group2":"mistral_Spanish",
     "meandiff":-0.1417,
     "p-adj":0.0,
-    "lower":-0.203,
-    "upper":-0.0804,
+    "lower":-0.202,
+    "upper":-0.0813,
     "reject":true
   },
   {
@@ -1318,8 +994,8 @@
     "group2":"llama_French",
     "meandiff":-0.3386,
     "p-adj":0.0,
-    "lower":-0.3554,
-    "upper":-0.3217,
+    "lower":-0.3551,
+    "upper":-0.322,
     "reject":true
   },
   {
@@ -1327,8 +1003,8 @@
     "group2":"llama_German",
     "meandiff":-0.3841,
     "p-adj":0.0,
-    "lower":-0.3964,
-    "upper":-0.3719,
+    "lower":-0.3962,
+    "upper":-0.3721,
     "reject":true
   },
   {
@@ -1336,8 +1012,8 @@
     "group2":"llama_Portuguese",
     "meandiff":-0.0662,
     "p-adj":0.0,
-    "lower":-0.1033,
-    "upper":-0.0291,
+    "lower":-0.1027,
+    "upper":-0.0296,
     "reject":true
   },
   {
@@ -1345,8 +1021,8 @@
     "group2":"llama_Spanish",
     "meandiff":-0.2164,
     "p-adj":0.0,
-    "lower":-0.2779,
-    "upper":-0.1549,
+    "lower":-0.277,
+    "upper":-0.1559,
     "reject":true
   },
   {
@@ -1354,8 +1030,8 @@
     "group2":"mistral_Base",
     "meandiff":-0.0197,
     "p-adj":0.0,
-    "lower":-0.0249,
-    "upper":-0.0145,
+    "lower":-0.0248,
+    "upper":-0.0146,
     "reject":true
   },
   {
@@ -1363,8 +1039,8 @@
     "group2":"llama_German",
     "meandiff":-0.0455,
     "p-adj":0.0,
-    "lower":-0.0657,
-    "upper":-0.0254,
+    "lower":-0.0654,
+    "upper":-0.0257,
     "reject":true
   },
   {
@@ -1372,8 +1048,8 @@
     "group2":"llama_Portuguese",
     "meandiff":0.2724,
     "p-adj":0.0,
-    "lower":0.232,
-    "upper":0.3128,
+    "lower":0.2327,
+    "upper":0.3121,
     "reject":true
   },
   {
@@ -1381,8 +1057,8 @@
     "group2":"llama_Spanish",
     "meandiff":0.1221,
     "p-adj":0.0,
-    "lower":0.0587,
-    "upper":0.1856,
+    "lower":0.0597,
+    "upper":0.1846,
     "reject":true
   },
   {
@@ -1390,8 +1066,8 @@
     "group2":"mistral_French",
     "meandiff":0.1978,
     "p-adj":0.0,
-    "lower":0.1665,
-    "upper":0.229,
+    "lower":0.167,
+    "upper":0.2286,
     "reject":true
   },
   {
@@ -1399,8 +1075,8 @@
     "group2":"llama_Portuguese",
     "meandiff":0.3179,
     "p-adj":0.0,
-    "lower":0.2792,
-    "upper":0.3566,
+    "lower":0.2798,
+    "upper":0.3561,
     "reject":true
   },
   {
@@ -1408,8 +1084,8 @@
     "group2":"llama_Spanish",
     "meandiff":0.1677,
     "p-adj":0.0,
-    "lower":0.1052,
-    "upper":0.2301,
+    "lower":0.1062,
+    "upper":0.2291,
     "reject":true
   },
   {
@@ -1417,8 +1093,8 @@
     "group2":"mistral_German",
     "meandiff":0.1439,
     "p-adj":0.0,
-    "lower":0.1217,
-    "upper":0.1661,
+    "lower":0.122,
+    "upper":0.1657,
     "reject":true
   },
   {
@@ -1426,8 +1102,8 @@
     "group2":"llama_Spanish",
     "meandiff":-0.1503,
     "p-adj":0.0,
-    "lower":-0.2215,
-    "upper":-0.079,
+    "lower":-0.2204,
+    "upper":-0.0801,
     "reject":true
   },
   {
@@ -1435,8 +1111,8 @@
     "group2":"mistral_Portuguese",
     "meandiff":0.0083,
     "p-adj":1.0,
-    "lower":-0.0416,
-    "upper":0.0583,
+    "lower":-0.0408,
+    "upper":0.0575,
     "reject":false
   },
   {
@@ -1444,8 +1120,8 @@
     "group2":"mistral_Spanish",
     "meandiff":0.1693,
     "p-adj":0.0,
-    "lower":0.0879,
-    "upper":0.2508,
+    "lower":0.0891,
+    "upper":0.2495,
     "reject":true
   },
   {
@@ -1453,8 +1129,8 @@
     "group2":"mistral_French",
     "meandiff":-0.1211,
     "p-adj":0.0,
-    "lower":-0.148,
-    "upper":-0.0942,
+    "lower":-0.1476,
+    "upper":-0.0946,
     "reject":true
   },
   {
@@ -1462,26 +1138,26 @@
     "group2":"mistral_German",
     "meandiff":-0.2206,
     "p-adj":0.0,
-    "lower":-0.2398,
-    "upper":-0.2013,
+    "lower":-0.2395,
+    "upper":-0.2016,
     "reject":true
   },
   {
     "group1":"mistral_Base",
     "group2":"mistral_Portuguese",
     "meandiff":-0.0382,
-    "p-adj":0.0004,
-    "lower":-0.0722,
-    "upper":-0.0041,
+    "p-adj":0.0003,
+    "lower":-0.0717,
+    "upper":-0.0046,
     "reject":true
   },
   {
     "group1":"mistral_Base",
     "group2":"mistral_Spanish",
     "meandiff":-0.0274,
-    "p-adj":0.9452,
-    "lower":-0.0822,
-    "upper":0.0274,
+    "p-adj":0.9106,
+    "lower":-0.0814,
+    "upper":0.0265,
     "reject":false
   },
   {
@@ -1489,8 +1165,8 @@
     "group2":"mistral_German",
     "meandiff":-0.0995,
     "p-adj":0.0,
-    "lower":-0.132,
-    "upper":-0.0669,
+    "lower":-0.1316,
+    "upper":-0.0674,
     "reject":true
   },
   {
@@ -1498,8 +1174,8 @@
     "group2":"mistral_Portuguese",
     "meandiff":0.0829,
     "p-adj":0.0,
-    "lower":0.04,
-    "upper":0.1259,
+    "lower":0.0406,
+    "upper":0.1253,
     "reject":true
   },
   {
@@ -1507,8 +1183,8 @@
     "group2":"mistral_Spanish",
     "meandiff":0.0937,
     "p-adj":0.0,
-    "lower":0.0331,
-    "upper":0.1543,
+    "lower":0.034,
+    "upper":0.1533,
     "reject":true
   },
   {
@@ -1516,8 +1192,8 @@
     "group2":"mistral_Portuguese",
     "meandiff":0.1824,
     "p-adj":0.0,
-    "lower":0.1437,
-    "upper":0.2211,
+    "lower":0.1443,
+    "upper":0.2205,
     "reject":true
   },
   {
@@ -1525,8 +1201,8 @@
     "group2":"mistral_Spanish",
     "meandiff":0.1931,
     "p-adj":0.0,
-    "lower":0.1354,
-    "upper":0.2509,
+    "lower":0.1363,
+    "upper":0.25,
     "reject":true
   },
   {
@@ -1534,8 +1210,8 @@
     "group2":"mistral_Spanish",
     "meandiff":0.0107,
     "p-adj":1.0,
-    "lower":-0.0533,
-    "upper":0.0747,
+    "lower":-0.0523,
+    "upper":0.0737,
     "reject":false
   }
 ]

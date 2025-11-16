@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from statsmodels.formula.api import ols  # type: ignore
 from statsmodels.stats.anova import anova_lm  # type: ignore
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
+import pingouin as pg
 from embedding_utils import (
     load_embeddings,
     extract_llm_human_similarities_for_anova,
@@ -33,6 +34,14 @@ language_codes = ["Base", "Portuguese", "German", "Spanish", "French"]
 df_anova = extract_llm_human_similarities_for_anova(all_embeddings, language_codes)
 output_file = "../data/anova_data.csv"
 df_anova.to_csv(output_file, index=False)
+
+# %%
+print("\n=== DESCRIPTIVE STATISTICS ===")
+print("\nBy Actor (LLM + reasoning type):")
+print(df_anova.groupby("actor1")["similarity"].describe())
+
+print("\nBy Language:")
+print(df_anova.groupby("language")["similarity"].describe())
 
 
 # %%
@@ -225,7 +234,7 @@ def plot_model_human_similarity_boxplot(df_anova, language_codes):
         "French": "#9372B2",
     }
 
-    fig, ax = plt.subplots(figsize=(14, 6))
+    _, ax = plt.subplots(figsize=(14, 6))
 
     box_width = 0.15
     group_gap = 0.3
@@ -277,7 +286,7 @@ def plot_model_human_similarity_boxplot(df_anova, language_codes):
         fontweight="bold",
         pad=20,
     )
-    ax.set_ylim(0, 1.0)
+    ax.set_ylim(-0.3, 1.0)
     ax.grid(axis="y", alpha=0.3)
 
     tick_positions = []
@@ -354,12 +363,35 @@ print(
 )
 
 # %%
-print("\n=== DESCRIPTIVE STATISTICS ===")
-print("\nBy Actor (LLM + reasoning type):")
-print(df_anova.groupby("actor1")["similarity"].describe())
+print("\n=== POST-HOC TEST: Games-Howell ===")
+df_anova["group"] = df_anova["actor1"] + "_" + df_anova["language"]
+gameshowell_results = pg.pairwise_gameshowell(
+    data=df_anova,
+    dv="similarity",
+    between="group",
+)
 
-print("\nBy Language:")
-print(df_anova.groupby("language")["similarity"].describe())
+gameshowell_results[["model1", "language1"]] = gameshowell_results["A"].str.split(
+    "_", n=1, expand=True
+)
+gameshowell_results[["model2", "language2"]] = gameshowell_results["B"].str.split(
+    "_", n=1, expand=True
+)
+filtered_gameshowell = gameshowell_results[
+    (gameshowell_results["model1"] == gameshowell_results["model2"])
+    | (gameshowell_results["language1"] == gameshowell_results["language2"])
+]
+
+filtered_gameshowell_output_path = "../results/gameshowell_filtered.json"
+filtered_gameshowell[
+    ["A", "B", "mean(A)", "mean(B)", "diff", "se", "T", "df", "pval", "hedges"]
+].to_json(filtered_gameshowell_output_path, orient="records", indent=2)
+
+print(
+    filtered_gameshowell[
+        ["A", "B", "mean(A)", "mean(B)", "diff", "pval", "hedges"]
+    ].to_string(index=False)
+)
 
 # # %%
 # print("\n=== ONE-WAY ANOVA: Comparing Actors ===")
@@ -378,7 +410,7 @@ df_anova = df_anova[
     ~df_anova["actor1"].isin(["gemini", "bison"])
 ]  # Remove Gemini and Bison from analysis
 
-print("\n=== TWO-WAY ANOVA: Actor × Language ===")
+print("\n=== TWO-WAY ANOVA: Actor × Language (statsmodels) ===")
 model = ols("similarity ~ C(actor1) * C(language)", data=df_anova).fit()
 anova_table = anova_lm(model, typ=2)
 print(anova_table)
@@ -387,5 +419,18 @@ anova_table_output_path = "../results/anova_table.json"
 anova_table.reset_index().rename(columns={"index": "term"}).to_json(
     anova_table_output_path, orient="records", indent=2
 )
+
+# %%
+print("\n=== TWO-WAY ANOVA: Actor × Language (pingouin) ===")
+anova_pg = pg.anova(
+    data=df_anova,
+    dv="similarity",
+    between=["actor1", "language"],
+    detailed=True,
+)
+print(anova_pg)
+
+anova_pg_output_path = "../results/anova_table_pingouin.json"
+anova_pg.to_json(anova_pg_output_path, orient="records", indent=2)
 
 # %%
